@@ -1,0 +1,23 @@
+--- RELEASE NOTES - 25-Oct-2022 ---
+
+-- PRE-DEPLOYMENT STEPS --
+
+1. Take backup.
+
+-- DEPLOYMENT --
+
+1. For WINDOWS
+    a. sfdx force:source:convert --rootdir force-app --outputdir delmarpackage
+    b. jar -cfM zippackage.zip delmarpackage
+    c. rmdir /s delmarpackage
+    d. sfdx force:mdapi:deploy --zipfile zippackage.zip --checkonly --testlevel RunSpecifiedTests --runtests 
+2. For MAC
+    a. sfdx force:source:convert --rootdir force-app --outputdir delmarpackage
+    b. zip -r zippackage.zip delmarpackage
+    c. rm -r delmarpackage
+    d. sfdx force:mdapi:deploy --zipfile zippackage.zip --checkonly --testlevel RunSpecifiedTests --runtests 
+    e. rm -r zippackage.zip
+
+
+-- POST-DEPLOYMENT STEPS --
+
