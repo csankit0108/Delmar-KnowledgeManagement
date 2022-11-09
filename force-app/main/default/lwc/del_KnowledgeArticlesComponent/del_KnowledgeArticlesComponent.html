@@ -1,0 +1,48 @@
+<template>
+    <lightning-card>
+        <div class="c-container">
+            <lightning-layout>
+                <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" large-device-size="6"
+                    padding="around-small">
+                    <lightning-card title="Available Categories">
+                        <div class="slds-box">
+                            <template if:true={blnShowTreeGrid}>
+                                <lightning-tree-grid columns={gridColumns} onrowselection={handleRowSelection} data={gridData}
+                                    key-field="name" ></lightning-tree-grid>
+                            </template><!--selected-rows={list_SelectedCategories}-->
+                        </div>
+                    </lightning-card>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" large-device-size="6"
+                    padding="around-small">
+                    <lightning-card title="Selected Categories(Drag/drop to reorder)">
+                        <div class="slds-box">
+                            <div>
+                                <c-tree items={list_SelectedCategories} onselect={handleCategorySelect}></c-tree>
+                            </div>
+                            <!--<ol class="slds-list_ordered slds-has-dividers_bottom">
+                                <template for:each={list_SelectedCategories} for:item="categoryName">
+                                    <li class="slds-item slds-var-p-around_xx-small" onclick={handleCategorySelect}
+                                        key={categoryName} data-name={categoryName} draggable="true" ondrop={handleDrop}
+                                        ondragstart={handleDragStart} ondragenter={handleDragEnter}
+                                        ondragleave={handleDragLeave} ondragover={handleDragOver}>
+                                        {categoryName}
+                                    </li>
+                                </template>
+                            </ol>-->
+                        </div>
+                    </lightning-card>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+        <!--
+        <lightning-dual-listbox class="slds-var-p-around_x-small" name="categories" label="Select Categories"
+            source-label="Available" selected-label="Selected" field-level-help="Select categories" options={list_Categories}
+            value={selectedCategories} onchange={handleCategoryChange}></lightning-dual-listbox>
+        <lightning-dual-listbox name="subcategories" class="slds-var-p-around_x-small" label="Select Subcategories"
+            source-label="Available" selected-label="Selected" field-level-help="Select subcategories" options={list_Subcategories}
+            value={selectedSubCategories} onchange={handleSubCategoryChange}></lightning-dual-listbox>-->
+        <lightning-button variant="brand" label="Save" title="Save" onclick={handleCategorySave}
+            class="slds-m-left_x-small slds-var-p-top_x-small slds-align_absolute-center"></lightning-button>
+    </lightning-card>
+</template>
