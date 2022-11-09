@@ -27,6 +27,8 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
     dragStartCategoryName;
     dropCategoryName;
     map_NameToIndexMapping = [];
+    list_SelectedCategoryNames = [];
+    list_FinalSortedCategories = [];
 
     constructor() {
         super();
@@ -103,19 +105,35 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
         });
         //this.list_SelectedCategories.push('Quick Text');
         this.blnShowTreeGrid = true;
-            this.list_Categories = [];
-            for (let objParentCategory of data.list_ParentCategoryNames) {
-                this.list_Categories.push({ label: objParentCategory, value: objParentCategory});
-            }
-            console.log(this.list_Categories);
-            this.selectedCategories = data.list_DefaultSortedCategories;
-            this.list_DefaultSortedSubcategories = data.list_DefaultSortedSubcategories
-            this.map_CategoriesByTopLevelCategories = data.map_CategoriesByTopLevelCategories;
-            this.handleDefaultSubcategories(this.selectedCategories);
+        this.list_Categories = [];
+        for (let objParentCategory of data.list_ParentCategoryNames) {
+            this.list_Categories.push({ label: objParentCategory, value: objParentCategory});
+        }
+        console.log(this.list_Categories);
+        this.selectedCategories = data.list_DefaultSortedCategories;
+        this.list_DefaultSortedSubcategories = data.list_DefaultSortedSubcategories
+        this.map_CategoriesByTopLevelCategories = data.map_CategoriesByTopLevelCategories;
+        this.handleDefaultSubcategories(this.selectedCategories);
+        let dummydata = JSON.parse('[{"label":"Systems","name":"Systems","expanded":true,"items":[{"label":"DCMS","name":"DCMS","expanded":true,"items":[{"label":"Client","name":"Client","expanded":true,"items":[{"label":"About DCMS","name":"About DCMS","expanded":true,"items":[],"sortorder":1},{"label":"Bookings","name":"Bookings","expanded":true,"items":[],"sortorder":2}],"sortorder":1}],"sortorder":1}],"sortorder":1},{"label":"Versapay","name":"Versapay","expanded":true,"items":[],"sortorder":2}]');
+        this.assignSortOrder(dummydata);
+        console.log('list_FinalSortedCategories:: ' + JSON.stringify(this.list_FinalSortedCategories));
         } else if (error) {
             console.log(error);
         }
+    }
 
+    assignSortOrder(data) {
+        for (let i=0; i<data.length; i++) {
+            let temp = data[i]
+            temp.sortorder = i + 1;
+            let temp2 = {};
+            temp2.name = data[i].name;
+            temp2.sortorder = i + 1;
+            this.list_FinalSortedCategories.push(temp2);
+            if(data[i].items && data[i].items.length > 0) {
+                this.assignSortOrder(data[i].items);
+            }
+        }
     }
 
     /*connectedCallback() {
@@ -197,7 +215,58 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
         console.log('Selected Category' +JSON.stringify(this.list_SelectedCategories));
         console.log('inside handleRowSelection');
         console.log('selected rows::' + JSON.stringify(event.detail.selectedRows));
-        for (let objSelectedCategory of event.detail.selectedRows) {
+        this.list_SelectedCategories = [];
+        let list_SelectedCategoriesTemp = [];
+        this.list_SelectedCategoryNames = [];
+        try {
+            for (let objSelectedCategory of event.detail.selectedRows) {
+            if (!this.list_SelectedCategoryNames.includes(objSelectedCategory.name)) {
+                this.list_SelectedCategoryNames.push(objSelectedCategory.name);
+            }
+
+            let list_Temp = [];
+            let list_ParentCategoryNames = this.getParentCategories(objSelectedCategory.name, list_Temp);
+            console.log('category name:: '+objSelectedCategory.name);
+            console.log('parent names:: '+JSON.stringify(list_ParentCategoryNames));
+            for (let objParentName of list_ParentCategoryNames) {
+                if (!this.list_SelectedCategoryNames.includes(objParentName)) {
+                    this.list_SelectedCategoryNames.push(objParentName);
+                }
+            }
+        }
+
+        console.log('list_SelectedCategoryNames:: '+JSON.stringify(this.list_SelectedCategoryNames));
+        this.list_SelectedCategoryNames.forEach(objSelectedCategoryName => {
+            list_SelectedCategoriesTemp.push({ 
+                label :objSelectedCategoryName, 
+                name :objSelectedCategoryName,
+                expanded: true 
+            });
+        });
+
+        let map_NameIndexMapping = list_SelectedCategoriesTemp.reduce((objMapNameToIndex, objCategoryName, index) => {
+            objMapNameToIndex[objCategoryName.name] = index;
+            return objMapNameToIndex;
+        }, {} );
+        console.log('map_NameIndexMapping:: ' + JSON.stringify(map_NameIndexMapping));
+        list_SelectedCategoriesTemp.forEach(objSelectedCategory => {
+            let root;
+            if (!this.map_CategoryByParent[objSelectedCategory.name]) {
+                root = objSelectedCategory;
+                this.list_SelectedCategories.push(root);
+            } else {
+                console.log('objSelectedCategory.name:: ' + objSelectedCategory.name + 'parent:: ' + this.map_CategoryByParent[objSelectedCategory.name]);
+                let objParentCategory = list_SelectedCategoriesTemp[map_NameIndexMapping[this.map_CategoryByParent[objSelectedCategory.name]]];
+                if (objParentCategory) {
+                    objParentCategory.items = [...(objParentCategory["items"] || []), objSelectedCategory];
+                }
+            }
+        });
+        console.log('this.list_SelectedCategories:: ' + JSON.stringify(this.list_SelectedCategories));
+        } catch(error) {
+            console.log(error);
+        }
+        /*for (let objSelectedCategory of event.detail.selectedRows) {
             let list_categories = this.list_SelectedCategories.map(objCategory => objCategory.name);
             if (!list_categories.includes(objSelectedCategory.name)) {
                 this.list_parentCategories = [];
@@ -209,7 +278,7 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
                 }
                 this.list_SelectedCategories.push({ label :objSelectedCategory.name, name :objSelectedCategory.name });
             }
-        }
+        }*/
 
         this.template.querySelector('c-tree').normalizeData(this.list_SelectedCategories);
     }
@@ -281,16 +350,17 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
         console.log(this.selectedCategories);
     }
 
-    getParentCategories(strSubcategory) {
+    getParentCategories(strSubcategory, list_AllParentNames) {
         console.log('inside recursive function'+strSubcategory);
         if (this.map_CategoryByParent[strSubcategory]) {
                 console.log('this is a unique subcategory');
-                if (!this.list_parentCategories.includes(this.map_CategoryByParent[strSubcategory])) {
-                    this.list_parentCategories.unshift(this.map_CategoryByParent[strSubcategory]);
-                    this.getParentCategories(this.map_CategoryByParent[strSubcategory]);
+                if (!list_AllParentNames.includes(this.map_CategoryByParent[strSubcategory])) {
+                    list_AllParentNames.unshift(this.map_CategoryByParent[strSubcategory]);
+                    this.getParentCategories(this.map_CategoryByParent[strSubcategory], list_AllParentNames);
                 }
+            return list_AllParentNames;
         } else {
-            return;
+            return list_AllParentNames;
         }
     }
 }

@@ -8,8 +8,8 @@
                         <div class="slds-box">
                             <template if:true={blnShowTreeGrid}>
                                 <lightning-tree-grid columns={gridColumns} onrowselection={handleRowSelection} data={gridData}
-                                    key-field="name" ></lightning-tree-grid>
-                            </template><!--selected-rows={list_SelectedCategories}-->
+                                    key-field="name" selected-rows={list_SelectedCategoryNames}></lightning-tree-grid>
+                            </template>
                         </div>
                     </lightning-card>
                 </lightning-layout-item>
