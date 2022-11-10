@@ -29,6 +29,7 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
     map_NameToIndexMapping = [];
     list_SelectedCategoryNames = [];
     list_FinalSortedCategories = [];
+    blnIsToggle = false;
 
     constructor() {
         super();
@@ -215,6 +216,11 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
         console.log('Selected Category' +JSON.stringify(this.list_SelectedCategories));
         console.log('inside handleRowSelection');
         console.log('selected rows::' + JSON.stringify(event.detail.selectedRows));
+        if (this.blnIsToggle ) {
+            this.blnIsToggle = false;
+            return;
+        }
+
         this.list_SelectedCategories = [];
         let list_SelectedCategoriesTemp = [];
         this.list_SelectedCategoryNames = [];
@@ -281,6 +287,17 @@ export default class Del_KnowledgeArticlesComponent extends LightningElement {
         }*/
 
         this.template.querySelector('c-tree').normalizeData(this.list_SelectedCategories);
+    }
+
+    handleToggle(event) {
+        console.log('inside toggle');
+        console.log('selected rows::' + JSON.stringify(event.detail.name));
+        console.log('selected rows::' + JSON.stringify(event.detail.isExpanded));
+        console.log('selected rows::' + JSON.stringify(event.detail.hasChildrenContent));
+        console.log('selected rows::' + JSON.stringify(event.detail.row));
+        if (!event.detail.isExpanded && event.detail.hasChildrenContent) {
+            this.blnIsToggle = true;
+        }
     }
 
     handleCategorySelect(event) {
