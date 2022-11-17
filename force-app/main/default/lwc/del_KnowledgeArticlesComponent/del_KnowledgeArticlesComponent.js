@@ -194,10 +194,10 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             console.log('list od child categories :: '+ list_ChildCategoryNames);
         }
 
-        list_ChildCategoryNames.forEach(strCategory => this.list_SelectedCategoryNames.push(strCategory));
         this.list_SelectedCategories = [];
         let list_SelectedCategoriesTemp = [];
         this.list_SelectedCategoryNames = [];
+        list_ChildCategoryNames.forEach(strCategory => this.list_SelectedCategoryNames.push(strCategory));
         try {
             for (let objSelectedCategory of event.detail.selectedRows) {
                 if (!this.list_SelectedCategoryNames.includes(objSelectedCategory.name)) {
