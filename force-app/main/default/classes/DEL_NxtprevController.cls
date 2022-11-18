@@ -1,3 +1,10 @@
+    /**
+     * @ author        : G Nanda Kishore Reddy 
+     * @ description   : This apex method is used differentiate previous knowledge article and next knowledge article by Sort Order
+     *                   and returns Sorted Knowledge Articles.
+     * @params         : 'recordId' - Id of the Knowledge Articles.
+     * @ return        : 'articles'  - Map of 'Next' or 'Previous' or 'Both' knowledge article corresponding to the current knowledge articles.
+     **/
 public with sharing class DEL_NxtprevController {
     @AuraEnabled(cacheable = true)
     public static Map<String, Knowledge__kav> DEL_Nxtprev(Id recordId) {
@@ -12,7 +19,6 @@ public with sharing class DEL_NxtprevController {
        String strQuery = 'SELECT Id,Title,KnowledgeArticleId,PublishStatus,VersionNumber,SortOrder__c FROM Knowledge__kav WHERE PublishStatus=\'Online\' WITH DATA CATEGORY '+groupName +' AT '+subCategory +' ORDER BY SortOrder__c';
        List<Knowledge__kav> filteredArticles =Database.query(strQuery);
        System.debug(filteredArticles);   
-       //Map string knowledge_kavv for prev(if prev null) and string for next
        Map<String, Knowledge__kav> articles = new Map<String, Knowledge__kav>();
         for (Knowledge__kav objKnowledgeArticleVersion : filteredArticles) {
             if (String.isNotBlank(String.valueOf(objKnowledgeArticleVersion.SortOrder__c)) &&
