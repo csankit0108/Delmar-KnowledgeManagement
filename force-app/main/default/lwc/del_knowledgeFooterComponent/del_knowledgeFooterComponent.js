@@ -6,11 +6,15 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
     @track objNextPrevious;
     @track blnNext = false;
     @track blnPrevious = false;
-    //@track buttonNextVariant='brand';
-    //@track buttonPreviousVariant='neutral';
     @api recordId;
 
     connectedCallback(){
+    /**
+     * @ author        : G Nanda Kishore Reddy 
+     * @ description   : This Method 'DEL_Nxtprev' from Class 'DEL_NxtprevController' is used to retrive the recordId
+     *                   and make blnNext,blnPrevious true based on the key value.
+     * @ params        : 'recordId' - Id of the Knowledge Articles.
+    **/
         DEL_Nxtprev({recordId:this.recordId})
         .then(result => {
             this.objNextPrevious=JSON.parse(JSON.stringify(result));
@@ -27,7 +31,11 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
         })
     }
 
-    
+/**
+* @ author        : G Nanda Kishore Reddy 
+* @ description   : This method is used to navigate knowledge articles based on 'Previous' and 'Next' button. 
+**/
+ 
     handleClick(evt){
         let recordIdToNavigate;
         if (evt.target.name == 'previous') {
