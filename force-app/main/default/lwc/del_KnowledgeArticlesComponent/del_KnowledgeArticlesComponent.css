@@ -20,7 +20,7 @@
     transition: all 0.2s ease-out;
 }
 
-.tableFixHead {
+.del-table-scrollable {
     overflow-y: auto;
     height: 15rem;
 }

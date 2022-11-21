@@ -53,19 +53,19 @@ public class DEL_KnowledgeManagementControllerTest {
         List<Knowledge__kav> list_NewKnowledgeArticles = new List<Knowledge__kav>();
         List<Knowledge__DataCategorySelection> list_KnowledgeDataCategorySelection = new List<Knowledge__DataCategorySelection>();
 
-		Knowledge__kav objKnowledgekav1 = new DEL_TestdataKnowledgekav.KnowledgeKavBuilder()
+		Knowledge__kav objKnowledgekav1 = new DEL_TestUtility.KnowledgeKavBuilder()
             .setTitle('Know about delmar details')
             .setUrlName('Know-about-delmar-details')
             .setSortOrder(1)
             .createKnowledgeKav();
             list_NewKnowledgeArticles.add(objKnowledgekav1);
-        Knowledge__kav objKnowledgekav2 = new DEL_TestdataKnowledgekav.KnowledgeKavBuilder()
+        Knowledge__kav objKnowledgekav2 = new DEL_TestUtility.KnowledgeKavBuilder()
             .setTitle('Role Heirarchy Level')
             .setUrlName('Role-Heirarchy-Level')
             .setSortOrder(2)
             .createKnowledgeKav();
             list_NewKnowledgeArticles.add(objKnowledgekav2);
-        Knowledge__kav objKnowledgekav3 = new DEL_TestdataKnowledgekav.KnowledgeKavBuilder()
+        Knowledge__kav objKnowledgekav3 = new DEL_TestUtility.KnowledgeKavBuilder()
             .setTitle('All Community Profiles')
             .setUrlName('All-Community-Profiles')
             .setSortOrder(3)
@@ -75,7 +75,7 @@ public class DEL_KnowledgeManagementControllerTest {
 		insert list_NewKnowledgeArticles;
 
         for (Knowledge__kav objKnowledgeArticle: [SELECT KnowledgeArticleId FROM Knowledge__kav]) {
-			Knowledge__DataCategorySelection objKnowledgeDataCategorySelection= new DEL_TestdataKnowledgekav.KnowledgeCategorySelection()
+			Knowledge__DataCategorySelection objKnowledgeDataCategorySelection= new DEL_TestUtility.KnowledgeCategorySelectionBuilder()
                 .setParentId(objKnowledgeArticle.Id)
                 .setDataCategoryGroupName('Delmar')
                 .setDataCategoryName('Client_Bookings')

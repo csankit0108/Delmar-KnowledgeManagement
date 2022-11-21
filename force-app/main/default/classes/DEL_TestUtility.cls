@@ -817,4 +817,78 @@ public class DEL_TestUtility {
             return objKnowledgeConfiguration;
         }
     }
+
+    /**
+    * @ Name     :  KnowledgeKavBuilder
+    * @ Purpose  :  To create Knowledge__kav record
+    * @ Author   :  G Nanda Kishore Reddy
+    **/
+    public class KnowledgeKavBuilder {
+        private String strTitle;
+        private String strurlName;
+        private Double douSortOrder;
+
+        public KnowledgeKavBuilder() {
+            this.strTitle='';
+            this.strUrlName='';
+        }
+        public KnowledgeKavBuilder setTitle(String strValue){
+            this.strTitle=strValue;
+            return this;
+        }
+        public KnowledgeKavBuilder setUrlName( String strValue){
+            this.strUrlName=strValue;
+            return this;
+        }
+      
+        public KnowledgeKavBuilder setSortOrder( Double douValue){
+            this.douSortOrder=douValue;
+            return this;
+        }
+        public Knowledge__kav createKnowledgeKav(){
+            Knowledge__kav objKnowledgekav= new Knowledge__kav();
+            objKnowledgekav.Title=this.strTitle;
+            objKnowledgekav.UrlName=this.strUrlName;
+            objKnowledgekav.SortOrder__c=this.douSortOrder;
+            return objKnowledgekav;
+        }
+
+    }
+
+    /**
+    * @ Name     :  KnowledgeCategorySelectionBuilder
+    * @ Purpose  :  To create Knowledge__DataCategorySelection record
+    * @ Author   :  G Nanda Kishore Reddy
+    **/
+    public class KnowledgeCategorySelectionBuilder {
+        private Id idParentId;
+        private String strDataCategoryGroupName;
+        private String strDataCategoryName;
+
+        public KnowledgeCategorySelectionBuilder() {
+            this.strDataCategoryGroupName = '';
+            this.strDataCategoryName = '';
+        }
+
+        public KnowledgeCategorySelectionBuilder setParentId(Id idValue){
+            this.idParentId=idValue;
+            return this;
+        }
+        public KnowledgeCategorySelectionBuilder setDataCategoryGroupName(String strValue){
+            this.strDataCategoryGroupName=strValue;
+            return this;
+        }
+        public KnowledgeCategorySelectionBuilder setDataCategoryName(String strValue){
+            this.strDataCategoryName=strValue;
+            return this;
+        }
+        public Knowledge__DataCategorySelection createKnowledgeDataCategorySelection(){
+            Knowledge__DataCategorySelection objKnowledgeDataCategorySelection= new Knowledge__DataCategorySelection();
+            objKnowledgeDataCategorySelection.ParentId=this.idParentId;
+            objKnowledgeDataCategorySelection.DataCategoryGroupName=this.strDataCategoryGroupName;
+            objKnowledgeDataCategorySelection.DataCategoryName=this.strDataCategoryName;
+            return objKnowledgeDataCategorySelection;
+        }
+        
+    }
 }
