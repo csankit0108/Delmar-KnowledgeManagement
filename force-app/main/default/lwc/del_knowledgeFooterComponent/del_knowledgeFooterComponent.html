@@ -16,12 +16,12 @@
         
                 <lightning-layout>
                     <lightning-layout-item padding="around-small" size="6">
-                        <lightning-button variant="neutral" style="padding-top: auto; padding-bottom: auto;" label="Previous" title="Previous Article" onclick={handleClick} 
+                        <lightning-button variant="neutral" style="padding-top: auto; padding-bottom: auto;" label={strPreviousButton}  onclick={handleClick} 
                             disabled={blnPrevious} class="slds-m-left_x-small" name="previous">
                         </lightning-button>
                     </lightning-layout-item>
                    <lightning-layout-item  padding="around-small" >
-                            <lightning-button variant="brand" label="Next" title="Next Article" onclick={handleClick} 
+                            <lightning-button variant="brand" label={strNextButton}  onclick={handleClick} 
                                 disabled={blnNext} class="slds-m-left_x-small" name="next">
                             </lightning-button>
                     </lightning-layout-item>   

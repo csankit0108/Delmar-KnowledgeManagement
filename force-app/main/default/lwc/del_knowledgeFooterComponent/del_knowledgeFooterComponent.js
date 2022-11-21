@@ -1,13 +1,19 @@
 import { LightningElement,api,track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import DEL_Nxtprev from '@salesforce/apex/DEL_NxtprevController.DEL_Nxtprev';
+import DEL_Nxtprev from '@salesforce/apex/DEL_KnowledgeManagementController.DEL_Nxtprev';
 
+//CLDEL00027 - "Next" (This is a label value for 'Next' button)
+import CLDEL00027 from "@salesforce/label/c.CLDEL00027";
+//CLDEL00028 - "Previous" (This is a label value for 'Previous' button)
+import CLDEL00028 from "@salesforce/label/c.CLDEL00028";
 export default class Del_knowledgeFooterComponent extends NavigationMixin(LightningElement) {
     @track objNextPrevious;
     @track blnNext = false;
     @track blnPrevious = false;
     @api recordId;
 
+    strNextButton= CLDEL00027;
+    strPreviousButton= CLDEL00028;
     connectedCallback(){
     /**
      * @ author        : G Nanda Kishore Reddy 
