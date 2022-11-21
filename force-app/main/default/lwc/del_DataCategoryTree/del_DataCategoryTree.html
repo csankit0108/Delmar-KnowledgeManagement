@@ -1,0 +1,66 @@
+<!--
+* 
+* @ Name            :   del_DataCategorytree
+* @ Purpose         :   This lwc is used for setting up Categories at Customer Level.
+* @ Author          :   Vinay kant
+*
+*   Date            |  Developer Name               |  Version      |  Changes
+* ======================================================================================================================================
+*   7-11-2022       |  ankit.c@absyz.com            |  1.0          |  Initial Version
+*   17-11-2022      |  vinaykant.kurre@absyz.com    |  1.1          |  Added Edit/Save Categories and Disabling Drag and Drop TreeNode.
+*
+-->
+<template>
+    <lightning-card>
+        <div if:true={blnLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium" variant="brand" class="slds-is-fixed"></lightning-spinner>
+        </div>
+        <div class="c-container">
+            <lightning-layout>
+                <template if:true={blnIsEditMode}>
+                    <lightning-layout-item size="12" small-device-size="12" medium-device-size="12" large-device-size="12"
+                        padding="around-small" class="slds-p-top_none">
+                        <lightning-card title={strTitleForSelectedCategories}>
+                            <lightning-button-stateful name="treegrid" variant="neutral" label-when-off="Expand All"
+                                label-when-on="Collapse All" selected={blnSelectedExpandCollapseTreeGrid} onclick={handleClickExpandCollapse}
+                                slot="actions" class="slds-var-m-horizontal_x-small">
+                            </lightning-button-stateful>
+                            <div class="slds-box slds-scrollable_y" style="height:25rem">
+                                <lightning-tree-grid columns={gridColumns} data={gridData} key-field="name" ontoggle={handleToggle}
+                                    selected-rows={list_SelectedCategoryNames} onrowselection={handleRowSelection}>
+                                </lightning-tree-grid>
+                            </div>
+                            <div class="slds-align_absolute-center slds-var-p-top_x-small">
+                                <lightning-button class="slds-var-p-around_xx-small" label={strCancelButtonLabel} onclick={handleOnCancel} 
+                                    slot="actions">
+                                </lightning-button>
+                                <lightning-button class="slds-var-p-around_xx-small" label={strSavebuttonLabel} onclick={handleOnSave} variant="brand" 
+                                    slot="actions" disabled={blnSaveDisabled}>
+                                </lightning-button>
+                            </div>
+                        </lightning-card>
+                    </lightning-layout-item>
+                </template>
+                <template if:false={blnIsEditMode}>
+                    <lightning-layout-item size="12" small-device-size="12" medium-device-size="12" large-device-size="12"
+                        padding="around-small" class="slds-p-top_none">
+                        <lightning-card title={strTitleForCustomerComponent}>
+                            <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandButtonLabel}
+                                label-when-on={strCollapseButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}
+                                slot="actions" class="slds-var-m-horizontal_x-small">
+                            </lightning-button-stateful>
+                            <template if:true={blnEditVisible}>
+                                <lightning-button label={strEditCategoriesButtonLabel} onclick={handleEditCategories} slot="actions"></lightning-button>
+                            </template>
+                            <div class="slds-box" style="height:25rem">
+                                <p>
+                                    <c-tree items={list_Categories} onselect={handleOnSelect} draggable={blnDraggable}></c-tree>
+                                </p>
+                            </div>
+                        </lightning-card>
+                    </lightning-layout-item>
+                </template>
+            </lightning-layout>
+        </div>
+    </lightning-card>
+</template>

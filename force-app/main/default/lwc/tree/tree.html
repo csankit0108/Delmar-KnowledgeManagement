@@ -1,0 +1,36 @@
+<!--
+  Copyright (c) 2019, salesforce.com, inc.
+  All rights reserved.
+  SPDX-License-Identifier: MIT
+  For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
+ -->
+
+<template>
+    <div class="slds-tree_container">
+        <h4 class="slds-tree__group-header" id="treeheading">{header}</h4>
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+            aria-label="Example table of Opportunities with striped rows">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <th class="slds-cell-fixed slds-p-around_none" scope="col">
+                        <div class="slds-truncate slds-th__action" title="Category Name">{strTreeTitle}</div>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+        <div class="slds-box slds-scrollable slds-p-around_none" style="height: 21.2rem;">
+        <c-tree-item
+            if:true={hasChildren}
+            class="slds-tree"
+            role="tree"
+            aria-labelledby="treeheading"
+            is-root
+            node-key={rootElement}
+            child-items={children}
+            focused-child={focusedChild}
+            draggable={draggable}
+        >
+        </c-tree-item>
+        </div>
+    </div>
+</template>

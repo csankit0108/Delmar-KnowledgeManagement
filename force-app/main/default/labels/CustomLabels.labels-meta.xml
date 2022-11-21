@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>CLDEL00019</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the title for the available categories tree grid</shortDescription>
+        <value>Available Categories</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00020</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the title for the selected categories tree</shortDescription>
+        <value>Selected Categories(Drag/drop to reorder)</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00021</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>This is a label value for &apos;Expand All&apos; button</shortDescription>
+        <value>Expand All</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00022</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>This is a label value for &apos;Collapse All&apos; button</shortDescription>
+        <value>Collapse All</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00023</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>This is a label value for &apos;Reset&apos; button</shortDescription>
+        <value>Reset</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00024</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>This is a label value for &apos;Save&apos; button</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00025</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the title for the available knowledge articles for a category</shortDescription>
+        <value>Sort Articles for Category:</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00026</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the label for column name in tree</shortDescription>
+        <value>Category Name</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00027</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>This is a label value for &apos;Next&apos; button</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00028</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>This is a label value for &apos;Previous&apos; button</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00029</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the title for Customer Category Component.</shortDescription>
+        <value>Table of Contents</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00030</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the title for Edit Categories Section for Customer Category Component.</shortDescription>
+        <value>Selected Categories</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00031</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the label for &apos;Edit Categories&apos; button in Customer Category Component.</shortDescription>
+        <value>Edit Categories</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00032</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the label for &apos;Cancel&apos; button in Customer Category Component.</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00033</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the Success Message for Successfully Saving of Selected Categories.</shortDescription>
+        <value>Successfully Saved Categories for</value>
+    </labels>
+    
+</CustomLabels>

@@ -1,3 +1,17 @@
+/*******************************************************************************************************************************
+* 
+* @ Name            :   DEL_KnowledgeManagementController
+* @ Purpose         :   Controller class for del_KnowledgeArticlesComponent
+* @ Author          :   Rakesh Nayak
+*
+*   Date            |  Developer Name               |  Version      |  Changes
+* ==============================================================================================================================
+*   17-11-2022      |  ankit.c@absyz.com            |  1.0          |  Initial Version
+*   17-11-2022      |  rakesh.nayak@absyz.com       |  1.1          |  Added category save and configuration deletion functions.
+*   21-11-2022      |  vinaykant.kurre@absyz.com    |  1.2          |  Added Knowledge Articles Management functions.
+*   21-11-2022      |  nandakishore.reddy@absyz.com |  1.2          |  Added Knowledge Articles Navigation function.
+
+********************************************************************************************************************************/
 public with sharing class DEL_KnowledgeManagementController {
     //Map of DEL_KnowledgeConfiguration__c records by Name
     public static Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationsByName;
@@ -6,7 +20,11 @@ public with sharing class DEL_KnowledgeManagementController {
     public static Map<String, String> map_SubCategoriesByUniqueName = new Map<String, String>();
 
     
-
+    /**
+    * @ Name     :  KnowledgeWrapper
+    * @ Purpose  :  Wrapper class to send response to the lwc.
+    * @ Author   :  Ankit CS
+    **/
     public class KnowledgeWrapper {
         @AuraEnabled public Boolean blnIsSuccess;
         //Map of List of sub categories by top level categories
@@ -30,6 +48,11 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public User objUserInformation = new user();
     }
 
+    /**
+    * @ Name     :  CategoryWrapper
+    * @ Purpose  :  Wrapper class to deserialize the JSON objects from lwc.
+    * @ Author   :  Ankit CS
+    **/
     public class CategoryWrapper {
         @AuraEnabled public String SortOrder;
         @AuraEnabled public String name;
@@ -38,6 +61,11 @@ public with sharing class DEL_KnowledgeManagementController {
         }
     }
     
+    /**
+    * @ Name     :  TableofContentsWrapper
+    * @ Purpose  :  Wrapper class to send knowledge configurations and knowledge articles to the component.
+    * @ Author   :  Ankit CS
+    **/
     public class TableofContentsWrapper {
         //This map defines what is the parent category for a sub category
         @AuraEnabled public Map<String, String> map_CategoryByParent = new Map<String, String>();
@@ -46,12 +74,20 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public List<DEL_KnowledgeConfiguration__c> list_SelectedCategories = new List<DEL_KnowledgeConfiguration__c>();
         //Map all Sub-Category Unique Name By it's Label Name
         @AuraEnabled public map<String, String> map_SubCategoriesByUniqueName = new Map<String, String>();
+        //Current Logged-In User information
+        @AuraEnabled public User objUserInformation = new user();
     }
 
+    /**
+    * @ author       :  Rakesh Nayak
+    * @ description  :  This method save all the selected categories
+    * @ params       :  'map_categoryByParent'       - Map of each category and its immediate parent
+    *                :  'list_SubcategoriesSelected' - List of slected subcategories from the component
+    *                :  'strPageName'                - Name of the page
+    * @ return       :  'list_KnowledgeConfigurationsforUpsert' - List of newly added/updated configurations
+    **/
     @AuraEnabled
     public static List<DEL_KnowledgeConfiguration__c> saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName) {
-        System.debug('list_SubcategoriesSelected :: '+list_SubcategoriesSelected);
-        System.debug('map_CategoryByParent :: '+map_CategoryByParent);
         map_KnowledgeConfigurationsByName = new Map<String,DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpsert = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpdate = new List<DEL_KnowledgeConfiguration__c>();
@@ -60,76 +96,93 @@ public with sharing class DEL_KnowledgeManagementController {
         List<DEL_KnowledgeConfiguration__c> list_ConfigurationsToDelete = new List<DEL_KnowledgeConfiguration__c>();
         //List of subcategories to be removed from the configs
         List<DEL_KnowledgeConfiguration__c> list_ConfigurationsForDeletion = new List<DEL_KnowledgeConfiguration__c>();
+        //List of  errors from all the DML operations
+        List<String> list_ConsolidatedDMLErrors =new List<String>();
 
-
-        Map<String, Id> map_CategoryIdByName = new Map<String, Id>();
-        for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : [SELECT 
-                                                                        Id,
-                                                                        Name,
-                                                                        ParentCategory__c,
-                                                                        SortOrder__c
-                                                                        FROM 
-                                                                        DEL_KnowledgeConfiguration__c
-                                                                        WHERE PageName__c = :strPageName 
-                                                                        ]
-        ) {
-            map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
-        }
-        
-        for (Object strsubCategory : list_SubcategoriesSelected) {
-            String strJson = JSON.serialize(strsubCategory);
-            CategoryWrapper objWrapper = (CategoryWrapper)JSON.deserialize(strjson, CategoryWrapper.class);
-            DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_KnowledgeConfiguration__c();
-            if(map_KnowledgeConfigurationsByName.containsKey(objWrapper.name)) {
-                objKnowledgeConfiguration = map_KnowledgeConfigurationsByName.get(objWrapper.name);
-                objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
-                objKnowledgeConfiguration.PageName__c = strPageName;
-                list_KnowledgeConfigurationsforUpdate.add(objKnowledgeConfiguration);
-            } else {
-                objKnowledgeConfiguration.Name = objWrapper.name;
-                objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
-                objKnowledgeConfiguration.PageName__c = strPageName;
-                list_KnowledgeConfigurationsforInsert.add(objKnowledgeConfiguration);
+        try{
+            for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : [SELECT 
+                                                                            Id,
+                                                                            Name,
+                                                                            ParentCategory__c,
+                                                                            SortOrder__c
+                                                                            FROM 
+                                                                            DEL_KnowledgeConfiguration__c
+                                                                            WHERE PageName__c = :strPageName 
+                                                                            ]
+            ) {
+                map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
             }
-        }
-        System.debug('List to be inserted :: '+list_KnowledgeConfigurationsforInsert);
-        System.debug('List to be updated :: '+list_KnowledgeConfigurationsforUpdate);
-        list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforInsert);
-        list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforUpdate);
-        for(String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
-            if(list_KnowledgeConfigurationsforUpdate.contains(map_KnowledgeConfigurationsByName.get(strCategory))) {
-                continue;
-            } else {
-                list_ConfigurationsForDeletion.add(map_KnowledgeConfigurationsByName.get(strcategory));
+            
+            for (Object strsubCategory : list_SubcategoriesSelected) {
+                String strJson = JSON.serialize(strsubCategory);
+                CategoryWrapper objWrapper = (CategoryWrapper)JSON.deserialize(strjson, CategoryWrapper.class);
+                DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_KnowledgeConfiguration__c();
+                if(map_KnowledgeConfigurationsByName.containsKey(objWrapper.name)) {
+                    objKnowledgeConfiguration = map_KnowledgeConfigurationsByName.get(objWrapper.name);
+                    objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
+                    objKnowledgeConfiguration.PageName__c = strPageName;
+                    list_KnowledgeConfigurationsforUpdate.add(objKnowledgeConfiguration);
+                } else {
+                    objKnowledgeConfiguration.Name = objWrapper.name;
+                    objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
+                    objKnowledgeConfiguration.PageName__c = strPageName;
+                    list_KnowledgeConfigurationsforInsert.add(objKnowledgeConfiguration);
+                }
             }
-        }
-        upsert list_KnowledgeConfigurationsforUpsert;
+            System.debug('List to be inserted :: '+list_KnowledgeConfigurationsforInsert);
+            System.debug('List to be updated :: '+list_KnowledgeConfigurationsforUpdate);
+            list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforInsert);
+            list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforUpdate);
+            for(String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
+                if(list_KnowledgeConfigurationsforUpdate.contains(map_KnowledgeConfigurationsByName.get(strCategory))) {
+                    continue;
+                } else {
+                    list_ConfigurationsForDeletion.add(map_KnowledgeConfigurationsByName.get(strcategory));
+                }
+            }
 
-        for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
-            map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
-        }
-        for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
-            map_CategoryIdByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration.Id);
-        }
-        System.debug('map of category ids :: '+map_CategoryIdByName);
+            List<Database.UpsertResult> list_UpsertResults = Database.upsert(list_KnowledgeConfigurationsforUpsert, false);
+            list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_UpsertResults, 'Upsert'));
 
-        for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
-            String strParentCategory = map_CategoryByParent.get(objKnowledgeConfiguration.Name);
-            Id idParentCategory = map_KnowledgeConfigurationsByName.get(strParentCategory)?.Id;
-            objKnowledgeConfiguration.ParentCategory__c = idParentCategory;
-            map_KnowledgeConfigurationsByName.get(objKnowledgeConfiguration.Name).ParentCategory__c  = idParentCategory;
-            System.debug('parent id::'+map_KnowledgeConfigurationsByName.get(objKnowledgeConfiguration.Name).ParentCategory__c);
+            for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
+                map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
+            }
+
+            for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
+                String strParentCategory = map_CategoryByParent.get(objKnowledgeConfiguration.Name);
+                Id idParentCategory = map_KnowledgeConfigurationsByName.get(strParentCategory)?.Id;
+                objKnowledgeConfiguration.ParentCategory__c = idParentCategory;
+                map_KnowledgeConfigurationsByName.get(objKnowledgeConfiguration.Name).ParentCategory__c  = idParentCategory;
+            }
+
+            List<Database.SaveResult> list_UpdateResults = Database.update(list_KnowledgeConfigurationsforUpsert, false);
+            list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_UpdateResults, 'Update'));
+
+            //Fetch and delete the categories and their inner subcategories
+            fetchChildCategories(list_ConfigurationsForDeletion, map_KnowledgeConfigurationsByName, list_ConfigurationsToDelete);
+
+            List<Database.DeleteResult> list_DeleteResults = Database.delete(list_ConfigurationsToDelete, true);
+            list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_DeleteResults, 'Delete'));
+            
+            if (!list_ConsolidatedDMLErrors.isEmpty()) {
+                DEL_Utils.logDMLException(
+                    'DEL_KnowledgeManagementController',
+                    'saveCategories',
+                    list_ConsolidatedDMLErrors
+                );
+            }
+
+            return list_KnowledgeConfigurationsforUpsert;
+
+        } catch (Exception objException) {
+            DEL_Utils.logException(
+                'DEL_KnowledgeManagementController',
+                'saveCategories',
+                objException,
+                true
+            );
+            return list_KnowledgeConfigurationsforUpsert; 
         }
-
-        update list_KnowledgeConfigurationsforUpsert;
-
-
-        fetchChildCategories(list_ConfigurationsForDeletion, map_KnowledgeConfigurationsByName, list_ConfigurationsToDelete);
-        for(DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_ConfigurationsToDelete) {
-            System.debug('elements to delete :: '+ objKnowledgeConfiguration);
-        }
-        delete list_ConfigurationsToDelete;
-        return list_KnowledgeConfigurationsforUpsert;
     }
 
     @AuraEnabled(cacheable = true)
@@ -149,6 +202,13 @@ public with sharing class DEL_KnowledgeManagementController {
         return list_SelectedCategories;
     }
     
+    /**
+    * @ author       :  Ankit CS
+    * @ description  :  This method queries and returns the TableofContentsWrapper Object which mainly consists of
+    *                   all the Available and Selected Categories based on the Page Name (strPageName).
+    * @ params       :  'strPageName' - Page Name from the Component to search for Knowledge Configurations.
+    * @ return       :  'TableofContentsWrapper' - Wrapper Class
+    **/
     @AuraEnabled(cacheable = true)
     public static TableofContentsWrapper getCategorySelectionsByPage(String strPageName){
         List<DescribeDataCategoryGroupResult> describeCategoryResult;
@@ -174,7 +234,7 @@ public with sharing class DEL_KnowledgeManagementController {
                                                                                 ORDER BY SortOrder__c ASC
                                                                                 ]
                 ) {
-                    map_ConfigsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
+                    map_ConfigsByName.put(objKnowledgeConfiguration.Name+objKnowledgeConfiguration.PageName__c, objKnowledgeConfiguration);
                     if (objKnowledgeConfiguration.PageName__c == 'Admin_Setup') {
                         if (!map_ConfigsByPageName.containsKey('Admin_Setup')) {
                             map_ConfigsByPageName.put('Admin_Setup', new List<String> { objKnowledgeConfiguration.Name });
@@ -205,20 +265,20 @@ public with sharing class DEL_KnowledgeManagementController {
                 
                 //Creating a list of pair objects to use as a parameter
                 //for the describe call
-                List<DataCategoryGroupSobjectTypePair> pairs = 
+                List<DataCategoryGroupSobjectTypePair> list_DataCategoryGroupSobjectTypePairs = 
                     new List<DataCategoryGroupSobjectTypePair>();
                 
                 //Looping throught the first describe result to create
-                //the list of pairs for the second describe call
+                //the list of list_DataCategoryGroupSobjectTypePairs for the second describe call
                 for(DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
-                    DataCategoryGroupSobjectTypePair p = new DataCategoryGroupSobjectTypePair();
-                    p.setSobject(singleResult.getSobject());
-                    p.setDataCategoryGroupName(singleResult.getName());
-                    pairs.add(p);
+                    DataCategoryGroupSobjectTypePair objDataCategoryGroupSobjectTypePair = new DataCategoryGroupSobjectTypePair();
+                    objDataCategoryGroupSobjectTypePair.setSobject(singleResult.getSobject());
+                    objDataCategoryGroupSobjectTypePair.setDataCategoryGroupName(singleResult.getName());
+                    list_DataCategoryGroupSobjectTypePairs.add(objDataCategoryGroupSobjectTypePair);
                 }
                 
                 //describeDataCategoryGroupStructures()
-                describeCategoryStructureResult = Schema.describeDataCategoryGroupStructures(pairs, false);
+                describeCategoryStructureResult = Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
                 //Getting data from the result
                 for(DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
                     //Get name of the associated Sobject
@@ -234,9 +294,9 @@ public with sharing class DEL_KnowledgeManagementController {
                     singleResult.getDescription();
                     
                     //Get the top level categories
-                    DataCategory [] toplevelCategories = singleResult.getTopCategories();
-                    if (!toplevelCategories.isEmpty()) {
-                        DataCategory category = toplevelCategories[0];
+                    DataCategory [] list_TopLevelCategories = singleResult.getTopCategories();
+                    if (!list_TopLevelCategories.isEmpty()) {
+                        DataCategory category = list_TopLevelCategories[0];
                         if (category.getName() == 'All') {
                             list_ParentCategories = category.getChildCategories();
                             for (DataCategory topLevelCategory : list_ParentCategories) {
@@ -245,7 +305,7 @@ public with sharing class DEL_KnowledgeManagementController {
                                     map_ConfigsByPageName.get('Admin_Setup').contains(topLevelCategory.getLabel())
                                 ) {
                                     system.debug('inside parent category addition for admin:: ' + map_ConfigsByName.get(topLevelCategory.getLabel()));
-                                    objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
+                                    objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()+'Admin_Setup'));
                                 }
                                 
                                 if (
@@ -253,7 +313,7 @@ public with sharing class DEL_KnowledgeManagementController {
                                     map_ConfigsByPageName.get(strPageName).contains(topLevelCategory.getLabel())
                                 ) {
                                     system.debug('inside parent category addition for page:: ' + map_ConfigsByName.get(topLevelCategory.getLabel()));
-                                    objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
+                                    objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()+strPageName));
                                 }
                                 
                                 List<DataCategory> list_Subcategories = new List<DataCategory>();
@@ -271,15 +331,15 @@ public with sharing class DEL_KnowledgeManagementController {
                                         map_ConfigsByPageName.containsKey('Admin_Setup') &&
                                         map_ConfigsByPageName.get('Admin_Setup').contains(objSubcategory.getLabel())
                                     ) {
-                                        objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()));
-                                        // objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
+                                        objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()+'Admin_Setup'));
+                                        //objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
                                     }
                                     
                                     if (
                                         map_ConfigsByPageName.containsKey(strPageName) && 
                                         map_ConfigsByPageName.get(strPageName).contains(objSubcategory.getLabel())
                                     ) {
-                                        objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()));
+                                        objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()+strPageName));
                                         // objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
                                     }
                                     list_SubcategoryNames.add(objSubcategory.getLabel());
@@ -298,12 +358,32 @@ public with sharing class DEL_KnowledgeManagementController {
                 objWrapper.map_ArticlesByCategoryName = getAllKnowledgeArticles();
                 objWrapper.map_CategoryByParent = map_CategoryByParent;
                 objWrapper.map_SubCategoriesByUniqueName = map_SubCategoriesByUniqueName;
+                Id idUserId = UserInfo.getUserId();
+                objWrapper.objUserInformation = [SELECT 
+                                                 Id,
+                                                 Name,
+                                                 UserPermissionsKnowledgeUser
+                                                 FROM User 
+                                                 WHERE Id = :idUserId
+                                                 AND IsActive = true];
                 return objWrapper;
             } catch(Exception objException) {
+                DEL_Utils.logException(
+                    'DEL_KnowledgeManagementController',
+                    'getCategorySelectionsByPage',
+                    objException,
+                    true
+                );
                 return objWrapper;
             }
     }
 
+    /**
+    * @ author       :  Rakesh Nayak & Ankit CS
+    * @ description  :  This method queries all the categories present in the org and segregates them based on hierarchy
+    * @ params       :  -
+    * @ return       :  'objWrapper' - object of KnowledgeWrapper
+    **/
     @AuraEnabled(cacheable = true)
     public static KnowledgeWrapper 
         getDescribeDataCategoryGroupStructureResults(){
@@ -339,21 +419,21 @@ public with sharing class DEL_KnowledgeManagementController {
                 
                 //Creating a list of pair objects to use as a parameter
                 //for the describe call
-                List<DataCategoryGroupSobjectTypePair> pairs = 
+                List<DataCategoryGroupSobjectTypePair> list_DataCategoryGroupSobjectTypePairs = 
                     new List<DataCategoryGroupSobjectTypePair>();
                 
                 //Looping throught the first describe result to create
-                //the list of pairs for the second describe call
+                //the list of list_DataCategoryGroupSobjectTypePairs for the second describe call
                 for(DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
-                    DataCategoryGroupSobjectTypePair p = new DataCategoryGroupSobjectTypePair();
-                    p.setSobject(singleResult.getSobject());
-                    p.setDataCategoryGroupName(singleResult.getName());
-                    pairs.add(p);
+                    DataCategoryGroupSobjectTypePair objDataCategoryGroupSobjectTypePair = new DataCategoryGroupSobjectTypePair();
+                    objDataCategoryGroupSobjectTypePair.setSobject(singleResult.getSobject());
+                    objDataCategoryGroupSobjectTypePair.setDataCategoryGroupName(singleResult.getName());
+                    list_DataCategoryGroupSobjectTypePairs.add(objDataCategoryGroupSobjectTypePair);
                 }
                 
                 //describeDataCategoryGroupStructures()
                 describeCategoryStructureResult = 
-                    Schema.describeDataCategoryGroupStructures(pairs, false);
+                    Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
                 
                 //Getting data from the result
                 for(DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
@@ -370,10 +450,10 @@ public with sharing class DEL_KnowledgeManagementController {
                     singleResult.getDescription();
                     
                     //Get the top level categories
-                    DataCategory [] toplevelCategories = singleResult.getTopCategories();
-                    system.debug('toplevelCategories size:: ' + toplevelCategories.size());
-                    if (!toplevelCategories.isEmpty()) {
-                        DataCategory category = toplevelCategories[0];
+                    DataCategory [] list_TopLevelCategories = singleResult.getTopCategories();
+                    system.debug('list_TopLevelCategories size:: ' + list_TopLevelCategories.size());
+                    if (!list_TopLevelCategories.isEmpty()) {
+                        DataCategory category = list_TopLevelCategories[0];
                         if (category.getName() == 'All') {
                             list_ParentCategories = category.getChildCategories();
                             for (DataCategory topLevelCategory : list_ParentCategories) {
@@ -433,11 +513,26 @@ public with sharing class DEL_KnowledgeManagementController {
                                                  WHERE Id = :idUserId
                                                  AND IsActive = true];
 
-            } catch (Exception e) {
+            } catch (Exception objException) {
+                DEL_Utils.logException(
+                    'DEL_KnowledgeManagementController',
+                    'getDescribeDataCategoryGroupStructureResults',
+                    objException,
+                    true
+                );
+                return objWrapper;
             }
             return objWrapper;
         }
 
+    /**
+    * @ author       :  Rakesh NayaK
+    * @ description  :  This method fetches all the inner categories for given categories
+    * @ params       :  'categories'                  - List of categories  whose inneer categories are to be fetched
+    *                :  'map_ChildCategoriesByParent' - Map of child categories by parent category
+    *                :  'allCategories'               - List of all categories present in the org
+    *                :  'map_CategoryByParent'        - Map of each inner category by it's immediate parent
+    **/
     public static void getAllCategories(
         DataCategory [] categories, 
         Map<String, String> map_CategoryByParent,
@@ -466,10 +561,16 @@ public with sharing class DEL_KnowledgeManagementController {
             allCategories.addAll(category.getChildCategories());
             getAllCategories(categoriesClone, map_CategoryByParent, allCategories, map_ChildCategoriesByParent);
             system.debug('allCategories:: '+allCategories);
-            //return allCategories;
         }
     }
 
+    /**
+    * @ author       :  Rakesh NayaK
+    * @ description  :  This method fetches all thee child categories for the categories to be deleted
+    * @ params       :  'list_ConfigsForDeletion'           - list of categories removed from the component
+    *                :  'map_KnowledgeConfigurationsByName' - map of Knowledge configuration records by category name
+    *                :  'list_ConfigurationsToDelete'       - final list of configurations to be deleted
+    **/
     public static void fetchChildCategories(
         List<DEL_KnowledgeConfiguration__c> list_ConfigsForDeletion, 
         Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationsByName,
@@ -498,6 +599,11 @@ public with sharing class DEL_KnowledgeManagementController {
         }
     }
 
+    /**
+    * @ author       :  Vinay kant
+    * @ description  :  This method will fetch all the Knowledge Articles under each active categories.
+    * @ return       :  'map_KnowledgeArticlesByCategoryName' - Map of all the Knowledge Articles by Category Unique Name.
+    **/
     @AuraEnabled(cacheable=true)
     public static Map<String, List<Knowledge__kav>> getAllKnowledgeArticles () { 
         List<Knowledge__DataCategorySelection> list_KnowledgeArticlesWithCategory = new List<Knowledge__DataCategorySelection>();
@@ -541,6 +647,11 @@ public with sharing class DEL_KnowledgeManagementController {
         return map_KnowledgeArticlesByCategoryName;
     }
 
+    /**
+    * @ author       :  Vinay kant
+    * @ description  :  This method set the 'SortOrder__c' field for the Knowledge Articles to store it in sorted order.
+    * @ params       :  'list_KnowledgeArticles' - list of Knowledge Articles
+    **/
     @AuraEnabled
     public static void setknowledgeArticlesOrder(List<Knowledge__kav> list_KnowledgeArticles) {
         Map<Id, Knowledge__kav> map_KnowledgeArticleByKnowledgeId = new Map<Id, Knowledge__kav>();
@@ -551,7 +662,6 @@ public with sharing class DEL_KnowledgeManagementController {
         try {
             if (list_KnowledgeArticles.size() > 0) {
                 for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
-                    System.debug('AtStart=>'+objKnowledgeArticle.VersionNumber);
                     map_KnowledgeArticleByKnowledgeId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle);
                     Id idDraftArticle = KbManagement.PublishingService.editOnlineArticle(objKnowledgeArticle.KnowledgeArticleId, false);
                     list_DraftArticleIds.add(idDraftArticle);
@@ -575,8 +685,48 @@ public with sharing class DEL_KnowledgeManagementController {
                     KbManagement.PublishingService.publishArticle(idNewUpdatedArticle, false);
                 }
             }
-        } catch (Exception e) { 
-            throw new AuraHandledException(e.getMessage());
+        } catch (Exception objException) {
+            DEL_Utils.logException(
+                'DEL_KnowledgeManagementController',
+                'setknowledgeArticlesOrder',
+                objException,
+                true
+            );
+            throw new AuraHandledException(objException.getMessage());
         }
+    }
+
+    /**
+     * @ author        : G Nanda Kishore Reddy 
+     * @ description   : This apex method is used differentiate previous knowledge article and next knowledge article by Sort Order
+     *                   and returns Sorted Knowledge Articles.
+     * @params         : 'recordId' - Id of the Knowledge Articles.
+     * @ return        : 'articles'  - Map of 'Next' or 'Previous' or 'Both' knowledge article corresponding to the current knowledge articles.
+     **/
+    @AuraEnabled(cacheable = true)
+    public static Map<String, Knowledge__kav> DEL_Nxtprev (Id recordId) {
+        Knowledge__kav objKnowledgeArticle = new Knowledge__kav();
+        objKnowledgeArticle= [SELECT Id,Title,KnowledgeArticleId,PublishStatus,VersionNumber,SortOrder__c FROM Knowledge__kav WHERE PublishStatus='Online' AND Id = :recordId];
+        System.debug(objKnowledgeArticle); 
+        Knowledge__DataCategorySelection objDataCategory = new Knowledge__DataCategorySelection();
+        objDataCategory=[SELECT Id,DataCategoryGroupName,DataCategoryName FROM Knowledge__DataCategorySelection WHERE ParentId= :recordId];
+        System.debug(objDataCategory);
+        String groupName=objDataCategory.DataCategoryGroupName + '__c';
+        String subCategory=objDataCategory.DataCategoryName + '__c';
+        String strQuery = 'SELECT Id,Title,KnowledgeArticleId,PublishStatus,VersionNumber,SortOrder__c FROM Knowledge__kav WHERE PublishStatus=\'Online\' WITH DATA CATEGORY '+groupName +' AT '+subCategory +' ORDER BY SortOrder__c';
+        List<Knowledge__kav> filteredArticles =Database.query(strQuery);
+        Map<String, Knowledge__kav> articles = new Map<String, Knowledge__kav>();
+        for (Knowledge__kav objKnowledgeArticleVersion : filteredArticles) {
+            if (String.isNotBlank(String.valueOf(objKnowledgeArticleVersion.SortOrder__c)) &&
+                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) ) {
+                if (objKnowledgeArticleVersion.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1)) {
+                    articles.put('previous', objKnowledgeArticleVersion);
+                }
+                if (objKnowledgeArticleVersion.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1)) {
+                    articles.put('next', objKnowledgeArticleVersion);
+                }
+            }
+        }
+       return articles;
     }
 }

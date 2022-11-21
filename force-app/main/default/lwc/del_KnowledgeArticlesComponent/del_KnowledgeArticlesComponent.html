@@ -1,11 +1,28 @@
+<!--
+* 
+* @ Name            :   del_KnowledgeArticlesComponent
+* @ Purpose         :   This is a component for selecting data categories and knoowledge articles and sorting them.
+* @ Author          :   Rakesh Nayak
+*
+*   Date            |  Developer Name                 |  Version      |  Changes
+* =================================================================================================================
+*   01-11-2022      |  rakesh.nayak@absyz.com         |  1.0          |  Initial Version
+*   15-11-2022      |  rakesh.nayak@absyz.com         |  1.1          |  Added reset button
+*   17-11-2022      |  nandakishore.redddy@absyz.com  |  1.1          |  Added expand/collapse button
+*
+-->
 <template>
     <lightning-card>
         <div class="c-container">
             <lightning-layout>
                 <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" large-device-size="6"
-                    padding="around-small">
-                    <lightning-card title="Available Categories">
-                        <div  class="slds-box slds-scrollable" style="height: 480px;">
+                    padding="around-small" class="slds-p-top_none">
+                    <lightning-card title={strAvailableCategoriesTreeTitle}>
+                        <lightning-button-stateful name="treegrid" variant="neutral" label-when-off={strExpandAllButtonLabel}
+                            label-when-on={strCollapseAllButtonLabel} selected={blnSelectedExpandCollapseTreeGrid} onclick={handleClickExpandCollapse}
+                            slot="actions" class="slds-var-m-horizontal_x-small">
+                        </lightning-button-stateful>
+                        <div  class="slds-box slds-scrollable" style="height: 25rem;">
                             <template if:true={blnShowTreeGrid}>
                                 <lightning-tree-grid columns={gridColumns} ontoggle={handleToggle} onrowselection={handleRowSelection} data={gridData}
                                     key-field="name" selected-rows={list_SelectedCategoryNames}></lightning-tree-grid>
@@ -14,9 +31,13 @@
                     </lightning-card>
                 </lightning-layout-item>
                 <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" large-device-size="6"
-                    padding="around-small">
-                    <lightning-card title="Selected Categories(Drag/drop to reorder)">
-                        <div  class="slds-box slds-scrollable" style="height: 480px;">
+                    padding="around-small" class="slds-p-top_none">
+                    <lightning-card title={strSelectedCategoriesTreeTitle}>
+                        <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandAllButtonLabel}
+                            label-when-on={strCollapseAllButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}
+                            slot="actions" class="slds-var-m-horizontal_x-small">
+                        </lightning-button-stateful>
+                        <div class="slds-box" style="height: 25rem;">
                             <div>
                                 <c-tree items={list_SelectedCategories} onselect={handleCategorySelect} draggable={blnDraggable}></c-tree>
                             </div>
@@ -28,23 +49,25 @@
         <lightning-card title={strKnowledgeArticleTableTitle}>
             <lightning-layout multiple-rows="false">
                 <template if:true={list_KnowledgeArticles}>
-                    <lightning-layout-item size="12" class="slds-align_absolute-center">
-                        <table aria-multiselectable="true" class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout 
-                            slds-table_resizable-cols" role="grid" title="Arrange Articles">
+                    <lightning-layout-item size="12" class="tableFixHead slds-p-horizontal_small">
+                        <table aria-multiselectable="true" title="Arrange Articles" >
                             <thead>
                                 <tr class="slds-line-height_reset">
-                                    <th scope="col" style="width:60%">
-                                        <div class="slds-truncate slds-text-align_center slds-p-around_xx-small">Article Title
-                                        </div>
+                                    <th scope="col">
+                                    </th>
+                                    <th scope="col">
+                                        Article Title
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template for:each={list_KnowledgeArticles} for:item="objKnowledgeArticle" for:index="index">
-                                    <tr key={objKnowledgeArticle.Id} draggable="true" ondrop={handleDrop}
-                                        ondragstart={handleDragStart} ondragenter={handleDragEnter}
-                                        ondragleave={handleDragLeave} ondragover={handleDragOver} onclick={handleClickRow}
-                                        data-index={index}>
+                                    <tr key={objKnowledgeArticle.Id} draggable="true" ondrop={handleDrop} ondragend={handleDragEnd}
+                                        ondragstart={handleDragStart} ondragenter={handleDragEnter} onclick={handleClickRow}
+                                        ondragleave={handleDragLeave} ondragover={handleDragOver} data-index={index}>
+                                        <td role="gridcell" class="slds-cell-wrap" style="width:10px;">
+                                            {objKnowledgeArticle.SortOrder__c}
+                                        </td>
                                         <td role="gridcell" data-index={index}>
                                             <div class="slds-cell-wrap" data-index={index}>
                                                 <a data-id={objKnowledgeArticle.KnowledgeArticleId} data-index={index} onclick={handleNavigateKnowledgeArticle}>
@@ -60,11 +83,11 @@
                 </template>
                 <lightning-layout-item size="12" class="slds-align_absolute-center">
                     <template if:true={visibleSaveButton}>
-                        <lightning-button variant="brand-outline" label="Reset" title="Reset" onclick={handleOnReset}
-                        disabled={blnIsResetDisabled} class="slds-m-left_x-small slds-var-p-top_x-small">
+                        <lightning-button variant="brand-outline" label={strResetButtonLabel} title="Reset" onclick={handleOnReset}
+                        disabled={blnIsResetDisabled} class="slds-var-m-left_x-small slds-var-p-top_x-small">
                         </lightning-button>
-                        <lightning-button variant="brand" label="Save" title="Save" onclick={handleCategorySave}
-                            disabled={disableSaveButton} class="slds-m-left_x-small slds-var-p-top_x-small">
+                        <lightning-button variant="brand" label={strSaveButtonLabel} title="Save" onclick={handleCategorySave}
+                            disabled={blnDisableSaveButton} class="slds-var-m-left_x-small slds-var-p-top_x-small">
                         </lightning-button>
                     </template>
                 </lightning-layout-item>
