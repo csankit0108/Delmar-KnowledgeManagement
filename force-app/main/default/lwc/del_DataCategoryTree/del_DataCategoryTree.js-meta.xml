@@ -6,10 +6,12 @@
         <target>lightning__RecordPage</target>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
     </targets>
 
     <targetConfigs>  
-        <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage">
+        <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage,lightningCommunity__Default">
             <property name="strPageName" type="String" label="Page Name" required="true" />
         </targetConfig>
     </targetConfigs>
