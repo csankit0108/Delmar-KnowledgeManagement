@@ -1,36 +1,67 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>*</members>
+        <members>DEL_KnowledgeManagementController</members>
+        <members>DEL_KnowledgeManagementControllerTest</members>
+        <members>DEL_TestUtility</members>
+        <members>DEL_Utils</members>
+        <members>DEL_UtilsTest</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexComponent</name>
+        <members>DEL_KnowledgeConfiguration__c.PageName__c</members>
+        <members>DEL_KnowledgeConfiguration__c.ParentCategory__c</members>
+        <members>DEL_KnowledgeConfiguration__c.SortOrder__c</members>
+        <name>CustomField</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexPage</name>
+        <members>DEL_KnowledgeManagement</members>
+        <members>DEL_KnowledgeConfiguration__c</members>
+        <name>CustomTab</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexTestSuite</name>
+        <members>DEL_KnowledgeManagement</members>
+        <name>FlexiPage</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexTrigger</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
+        <members>del_KnowledgeArticlesComponent</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
-        <members>*</members>
-        <name>StaticResource</name>
+        <members>DEL_KnowledgeConfiguration__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>CLDEL00019</members>
+        <members>CLDEL00020</members>
+        <members>CLDEL00021</members>
+        <members>CLDEL00022</members>
+        <members>CLDEL00023</members>
+        <members>CLDEL00024</members>
+        <members>CLDEL00025</members>
+        <members>CLDEL00026</members>
+        <members>CLDEL00027</members>
+        <members>CLDEL00028</members>
+        <members>CLDEL00029</members>
+        <members>CLDEL00030</members>
+        <members>CLDEL00031</members>
+        <members>CLDEL00032</members>
+        <members>CLDEL00033</members>
+        <name>CustomLabel</name>
+    </types>
+    <types>
+        <members>DEL_KnowledgeConfiguration__c.All</members>
+        <name>ListView</name>
+    </types>
+        <types>
+        <members>DEL_KnowledgeConfiguration__c-Knowledge Configuration Layout</members>
+        <name>Layout</name>
+    </types>
+        <types>
+        <members>del_KnowledgeArticlesComponent</members>
+        <members>del_DataCategoryTree</members>
+        <members>del_knowledgeFooterComponent</members>
+        <name>LightningComponentBundle</name>
     </types>
     <version>55.0</version>
 </Package>
