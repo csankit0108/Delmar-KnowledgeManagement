@@ -59,6 +59,9 @@
         <members>del_knowledgeFooterComponent</members>
         <members>tree</members>
         <members>treeItem</members>
+        <members>primitiveIcon</members>
+        <members>utils</members>
+        <members>utilsPrivate</members>
         <name>LightningComponentBundle</name>
     </types>
         <types>
