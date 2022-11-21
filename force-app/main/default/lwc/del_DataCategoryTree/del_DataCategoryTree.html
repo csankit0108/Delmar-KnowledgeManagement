@@ -52,7 +52,7 @@
                             <template if:true={blnEditVisible}>
                                 <lightning-button label={strEditCategoriesButtonLabel} onclick={handleEditCategories} slot="actions"></lightning-button>
                             </template>
-                            <div class="slds-box" style="height:25rem">
+                            <div class="slds-box del-tree-box">
                                 <p>
                                     <c-tree items={list_Categories} onselect={handleOnSelect} draggable={blnDraggable}></c-tree>
                                 </p>

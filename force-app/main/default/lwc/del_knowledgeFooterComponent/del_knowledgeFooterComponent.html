@@ -1,0 +1,33 @@
+<!--
+* 
+* @ Name            :   del_KnowledgeFooterComponent
+* @ Purpose         :   This is a component for having 'Next' and 'Previous' buttons in the Knowledge Page for navigating to Next and 
+                        Previous knowledge articles.
+* @ Author          :   G Nanda Kishore Reddy
+*
+*   Date            |  Developer Name                 |  Version      |  Changes
+* =================================================================================================================
+*   26-10-2022      |  nandakishore.reddy@absyz.com         |  1.0          |  Initial Version
+*
+-->
+<template>
+    <article class="slds-card">
+        <div class="slds-grid slds-gutters">
+        
+                <lightning-layout>
+                    <lightning-layout-item padding="around-small" size="6">
+                        <lightning-button variant="neutral" style="padding-top: auto; padding-bottom: auto;" label={strPreviousButton}  onclick={handleClick} 
+                            disabled={blnPrevious} class="slds-m-left_x-small" name="previous">
+                        </lightning-button>
+                    </lightning-layout-item>
+                   <lightning-layout-item  padding="around-small" >
+                            <lightning-button variant="brand" label={strNextButton}  onclick={handleClick} 
+                                disabled={blnNext} class="slds-m-left_x-small" name="next">
+                            </lightning-button>
+                    </lightning-layout-item>   
+                </lightning-layout>
+           
+        </div>
+        
+    </article>
+    </template>

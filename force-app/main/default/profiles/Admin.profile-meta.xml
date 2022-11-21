@@ -18,7 +18,7 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <layoutAssignments>
-        <layout>DEL_KnowledgeConfiguration__c-Knowlwdge Configuration Layout</layout>
+        <layout>DEL_KnowledgeConfiguration__c-Knowledge Configuration Layout</layout>
     </layoutAssignments>
     <fieldPermissions>
         <editable>true</editable>

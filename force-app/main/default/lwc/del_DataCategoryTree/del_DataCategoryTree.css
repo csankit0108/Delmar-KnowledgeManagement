@@ -2,6 +2,11 @@
     --slds-c-card-header-spacing-block-start : 0.25rem;
 }
 
+.del-tree-box {
+    height:25rem;
+    padding:0;
+}
+
 td {
     cursor: grab;
 }
