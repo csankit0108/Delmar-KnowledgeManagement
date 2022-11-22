@@ -12,6 +12,7 @@
         <members>DEL_KnowledgeConfiguration__c.PageName__c</members>
         <members>DEL_KnowledgeConfiguration__c.ParentCategory__c</members>
         <members>DEL_KnowledgeConfiguration__c.SortOrder__c</members>
+        <members>Knowledge__kav.SortOrder__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -25,6 +26,7 @@
     </types>
     <types>
         <members>DEL_KnowledgeConfiguration__c</members>
+        <members>Knowledge__kav<members>
         <name>CustomObject</name>
     </types>
     <types>

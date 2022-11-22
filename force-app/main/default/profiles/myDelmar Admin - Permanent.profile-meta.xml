@@ -18,7 +18,7 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <layoutAssignments>
-        <layout>DEL_KnowledgeConfiguration__c-Knowlwdge Configuration Layout</layout>
+        <layout>DEL_KnowledgeConfiguration__c-Knowledge Configuration Layout</layout>
     </layoutAssignments>
     <fieldPermissions>
         <editable>false</editable>
@@ -33,6 +33,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>DEL_KnowledgeConfiguration__c.SortOrder__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Knowledge__kav.SortOrder__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <tabVisibilities>

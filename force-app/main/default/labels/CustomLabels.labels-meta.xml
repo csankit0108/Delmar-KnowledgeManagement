@@ -120,4 +120,20 @@
         <shortDescription>It stores the Success Message for Successfully Saving of Selected Categories.</shortDescription>
         <value>Successfully Saved Categories for</value>
     </labels>
+    <labels>
+        <categories>lightning</categories>
+        <fullName>lightning_LightningTree_expandBranch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>expandBranch</shortDescription>
+        <value>Expand Tree Branch</value>
+      </labels>
+      <labels>
+        <categories>lightning</categories>
+        <fullName>lightning_LightningTree_collapseBranch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>collapseBranch</shortDescription>
+        <value>Collapse Tree Branch</value>
+      </labels>
 </CustomLabels>
