@@ -25,8 +25,15 @@ import CLDEL00031 from "@salesforce/label/c.CLDEL00031";
 import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 //CLDEL00033 - "Successfully Saved Categories for" (It stores the Success Message for Successfully Saving of Selected Categories.)
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
+
 export default class Del_DataCategoryTree extends NavigationMixin(LightningElement) {
     @api strPageName;
+    @api showExpandCollpaseButton;
+    @api intTableHeight;
+    @api strFontWeight;
+    @api strFontStyle;
+    @api blnSetUnderline;
+    @api strFontColor;
 
     strExpandButtonLabel = CLDEL00021;
     strCollapseButtonLabel = CLDEL00022;
@@ -46,13 +53,15 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
     blnLoading = false;
     blnSaveDisabled = true;
     blnEditVisible = false;
-    blnSelectedExpandCollapseTree = false;
+    blnIsTreeLoaded = false;
+    blnSelectedExpandCollapseTree = true;
     blnSelectedExpandCollapseTreeGrid = false;
     wiredCategoryData;
     map_NameToIndexMapping;
     map_ArticlesByCategoryName = [];
     map_CategoryByParent = [];
-    map_UniqueNameByLabelNameCategories;
+    map_LabelNameByUniqueNameCategories;
+    list_GroupCategoryNames = [];
     @track items = [];
     @track list_Categories;
     @track list_KnowledgeArticles;
@@ -64,10 +73,13 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
     @track gridData = [];
     @track gridColumns = [{
         type: 'text',
-        fieldName: 'name',
+        fieldName: 'label',
         label: 'Category Name'
     }];
     
+    renderedCallback() {
+        this.blnIsTreeLoaded = true;
+    }
     
     @wire(getCategorySelectionsByPage, {strPageName : '$strPageName'})
     wiredCategoryData(result) {
@@ -86,20 +98,25 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             this.list_AvailableCategories = JSON.parse(JSON.stringify(data.list_AvailableCategories));
             this.map_CategoryByParent = JSON.parse(JSON.stringify(data.map_CategoryByParent));
             this.map_ArticlesByCategoryName = JSON.parse(JSON.stringify(data.map_ArticlesByCategoryName));
-            this.map_UniqueNameByLabelNameCategories = JSON.parse(JSON.stringify(data.map_SubCategoriesByUniqueName));
-            let objUserInformation = JSON.parse(JSON.stringify(data.objUserInformation));
-            if (objUserInformation && objUserInformation.hasOwnProperty('UserPermissionsKnowledgeUser')) {
-                this.blnEditVisible = objUserInformation.UserPermissionsKnowledgeUser;
-            }
+            this.map_LabelNameByUniqueNameCategories = JSON.parse(JSON.stringify(data.map_CategoriesByUniqueName));
+            this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
-            this.sortTreeItems(this.list_SelectedCategories);
-            this.makeTree(this.list_SelectedCategories, true);
+            let objUserInformation = JSON.parse(JSON.stringify(data.objUserInformation));
+            if (objUserInformation && !objUserInformation.IsPortalEnabled && 
+                objUserInformation.hasOwnProperty('UserPermissionsKnowledgeUser') &&
+                objUserInformation["UserPermissionsKnowledgeUser"]
+            ) {
+                this.blnEditVisible = true;
+            }
+            this.filterKnowledgeArticles(objUserInformation.LanguageLocaleKey);
+            this.selectedCategoriesFilter(this.list_SelectedCategories);
             this.sortTreeItems(this.list_AvailableCategories);
             this.makeTree(this.list_AvailableCategories, false);
-            //this.sortTreeItems(this.items);
+            this.sortTreeItems(this.list_SelectedCategories);
+            this.makeTree(this.list_SelectedCategories, true);
             this.changeAttributeNameOfItems(this.items);
             this.list_Categories = this.items;
-
+            
             this.template.querySelector('c-tree').normalizeData(this.list_Categories);
             
             this.blnLoading = false;
@@ -109,54 +126,84 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             this.blnLoading = false;
         }
     }
+    
+    /**
+     * @ author      : Vinay kant
+     * @ description : This method will recheck the selected categories and their order based on available categories.
+     * @ params      : 'list_SelectedCategories' - List of Knowledge Configuration records selected for the instance.
+    **/
+    selectedCategoriesFilter(list_SelectedCategories){
+        let map_SortingOrderByAdminSetupConfigs = this.list_AvailableCategories.reduce( (objMapNameToIndex, objKnowledgeConfiguration, index) => {
+            objMapNameToIndex[objKnowledgeConfiguration.Name] = objKnowledgeConfiguration.SortOrder__c;
+            return objMapNameToIndex;
+        }, {} );
+        list_SelectedCategories.forEach((eachConfig, index) => {
+            if (map_SortingOrderByAdminSetupConfigs.hasOwnProperty(eachConfig.Name)) {
+                eachConfig.SortOrder__c = map_SortingOrderByAdminSetupConfigs[eachConfig.Name];
+            } else {
+                list_SelectedCategories.splice(index, 1);
+            }
+        });
+    }
 
     /**
      * @ author      : Vinay kant & Ankit C
      * @ description : This method will form a tree structure consisting of list of nested JSON Objects.
      * @ params      : 'list_KnowledgeConfigsRecords' - List of Knowledge Configuration records.
-     *               : 'blnIsTree' - Boolean Value to distinguish Available and Selected Categories based on Page Name.
+     *               : 'blnIsTree' - Boolean Value to distinguish Available and Selected Categories based on Instance Name.
     **/
     makeTree (list_KnowledgeConfigsRecords, blnIsTree) {
+        this.list_GroupCategoryNames.forEach((groupCategoryName, index) =>{
+            list_KnowledgeConfigsRecords.push({
+                Name : groupCategoryName,
+                SortOrder__c : index + 1
+            })
+        });
+
         const nameMappingConfigs = list_KnowledgeConfigsRecords.reduce( (objMapNameToIndex, objKnowledgeConfiguration, index) => {
             objMapNameToIndex[objKnowledgeConfiguration.Name] = index;
             return objMapNameToIndex;
         }, {} );
 
         list_KnowledgeConfigsRecords.forEach(objKnowledgeConfiguration => {
+            let root = objKnowledgeConfiguration;
             if (blnIsTree) {
                 this.list_SelectedCategoryNames.push(objKnowledgeConfiguration.Name);
                 this.list_SelectedCategoryNamesOld.push(objKnowledgeConfiguration.Name);
                 this.list_SelectedCategoryNamesBackup = this.list_SelectedCategoryNames;
-            }
-
-            let strUniqueNameCategory = this.map_UniqueNameByLabelNameCategories[objKnowledgeConfiguration.Name];
-            let root;
-            if (!objKnowledgeConfiguration.hasOwnProperty("ParentCategory__c")) {
-                root = objKnowledgeConfiguration;
-                if (blnIsTree) {
-                    if (this.map_ArticlesByCategoryName[strUniqueNameCategory]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[strUniqueNameCategory]) {
+                
+                if (this.list_GroupCategoryNames.includes(this.map_CategoryByParent[objKnowledgeConfiguration.Name])) {
+                    if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
+                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
                             root.items = [...(root["items"] || []), objArticle];
                         }
                     }
                     this.items.push(root);
                 } else {
-                    root.name = objKnowledgeConfiguration.Name; 
-                    this.gridData.push(root);
-                }
-            } else {
-                let parentCategory = list_KnowledgeConfigsRecords[nameMappingConfigs[this.map_CategoryByParent[objKnowledgeConfiguration.Name]]];
-                if (blnIsTree) {
-                    parentCategory.items = [...(parentCategory["items"] || []), objKnowledgeConfiguration];
+                    let parentCategory = list_KnowledgeConfigsRecords[nameMappingConfigs[this.map_CategoryByParent[objKnowledgeConfiguration.Name]]];
+                    if (parentCategory) {
+                        parentCategory.items = [...(parentCategory["items"] || []), objKnowledgeConfiguration];
+                    }
                     let child = list_KnowledgeConfigsRecords[nameMappingConfigs[objKnowledgeConfiguration.Name]];
-                    if (this.map_ArticlesByCategoryName[strUniqueNameCategory]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[strUniqueNameCategory]) {
+                    if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
+                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
                             child.items = [...(child["items"] || []), objArticle];
                         }
-                    }   
+                    }
+                }
+            } else {
+                if (!this.map_CategoryByParent[objKnowledgeConfiguration.Name]) {
+                    root.name = objKnowledgeConfiguration.Name;
+                    root.label = this.map_LabelNameByUniqueNameCategories[objKnowledgeConfiguration.Name];
+                    this.gridData.push(root);
                 } else {
                     objKnowledgeConfiguration.name = objKnowledgeConfiguration.Name;
-                    parentCategory._children = [...(parentCategory["_children"] || []), objKnowledgeConfiguration];
+                    objKnowledgeConfiguration.label = this.map_LabelNameByUniqueNameCategories[objKnowledgeConfiguration.Name];
+                    let parentCategory = list_KnowledgeConfigsRecords[nameMappingConfigs[this.map_CategoryByParent[objKnowledgeConfiguration.Name]]];
+                    
+                    if (parentCategory) {
+                        parentCategory._children = [...(parentCategory["_children"] || []), objKnowledgeConfiguration];
+                    }
                 }
             }
         });
@@ -184,17 +231,14 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
                 if (objCategory.hasOwnProperty("VersionNumber")) {
                     delete objCategory["VersionNumber"];
                 }
-                if (objCategory.hasOwnProperty("SortOrder__c")) {
-                    delete objCategory["SortOrder__c"];
-                }
                 if (objCategory.hasOwnProperty("KnowledgeArticleId")) {
                     delete objCategory["KnowledgeArticleId"];
                 }
 
             } else {
-                objCategory["label"] = objCategory.Name;
-                objCategory["name"] = objCategory.Id;
-                objCategory["expanded"] = false;
+                objCategory["label"] = this.map_LabelNameByUniqueNameCategories[objCategory.Name];
+                objCategory["name"] = objCategory.Name;
+                objCategory["expanded"] = true;
 
                 if (objCategory.hasOwnProperty("Id")) {
                     delete objCategory["Id"];
@@ -224,20 +268,51 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
      * @ params      : 'list_nestedTreeNodes' - List of nested JSON Object (Tree Structure)
     **/
     sortTreeItems(list_nestedTreeNodes) {
-        list_nestedTreeNodes.sort((objFirst, objSecond) => {
-            if (!objFirst.hasOwnProperty("Title") && !objSecond.hasOwnProperty("Title")) {
-                var intFirstObjSortOrder = objFirst.SortOrder__c;
-                var intSecondObjSortOrder = objSecond.SortOrder__c;
-                if (objFirst.hasOwnProperty("items")) {
-                    this.sortTreeItems(objFirst.items);
-                }
-                if (objSecond.hasOwnProperty("items")) {
-                    this.sortTreeItems(objSecond.items);
-                }
-                if(intFirstObjSortOrder < intSecondObjSortOrder) return -1;
-                if(intFirstObjSortOrder > intSecondObjSortOrder) return 1;
-                return 0;
+        return list_nestedTreeNodes.sort((objFirst, objSecond) => {
+            var intFirstObjSortOrder = objFirst.SortOrder__c;
+            var intSecondObjSortOrder = objSecond.SortOrder__c;
+            if (objFirst.hasOwnProperty("items")) {
+                this.sortTreeItems(objFirst.items);
             }
+            if (objSecond.hasOwnProperty("items")) {
+                this.sortTreeItems(objSecond.items);
+            }
+            if(intFirstObjSortOrder < intSecondObjSortOrder) return -1;
+            if(intFirstObjSortOrder > intSecondObjSortOrder) return 1;
+            return 0;
+        });
+    }
+
+    /**
+     * @ author      : Vinay kant
+     * @ description : This method will filter knowledge article records based on logged-in user preference language.
+     * @ params      : 'strUserLanguageCode' - Current logged-in user preference language code.
+    **/
+    filterKnowledgeArticles (strUserLanguageCode) {
+        Object.keys(this.map_ArticlesByCategoryName).forEach(eachCategory => {
+            let listKnowledgeArticlesCategory = this.map_ArticlesByCategoryName[eachCategory];
+            let listKnowledgeArticlesTemp = [];
+            let map_ArticlesByKnowledgeArticleId = {};
+            for (let article of listKnowledgeArticlesCategory) {
+                let listArticle = []; 
+                if (!map_ArticlesByKnowledgeArticleId.hasOwnProperty(article.KnowledgeArticleId)) {
+                    listArticle.push(article);
+                    map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId] = listArticle;
+                } else {
+                    listArticle = map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId];
+                    listArticle.push(article);
+                }
+                map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId] = listArticle;
+            }
+            Object.keys(map_ArticlesByKnowledgeArticleId).forEach(idKnowledgeArticleId => {
+                let list_Articles = map_ArticlesByKnowledgeArticleId[idKnowledgeArticleId];
+                let filtered_Articles = [...list_Articles].filter(article => article.Language === strUserLanguageCode);
+                if (filtered_Articles.length < 1) {
+                    filtered_Articles = [...list_Articles].filter(article => article.IsMasterLanguage === true);
+                }
+                listKnowledgeArticlesTemp.push(...filtered_Articles);
+            });
+            this.map_ArticlesByCategoryName[eachCategory] = this.sortTreeItems(listKnowledgeArticlesTemp);
         });
     }
 
@@ -446,7 +521,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
 
     /**
      * @ author      : Vinay kant
-     * @ description : This method will save the selected Categories for the current Page Name from Lightning Tree-Grid Component.
+     * @ description : This method will save the selected Categories for the current Instance Name from Lightning Tree-Grid Component.
     **/
     handleOnSave(event) {
         let gridDataClone = this.gridData;
@@ -456,11 +531,11 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
 
         /**
          * @ author      : Vinay kant
-         * @ description : This apex method will save all selected categories for the current page name given in the component.
+         * @ description : This apex method will save all selected categories for the current Instance name given in the component.
          *                 - 'DEL_KnowledgemanagementController.saveCategories()'
          * @ params      : 'list_SubcategoriesSelected' - List of categories Selected in the Tree-Grid Component
          *               : 'map_CategoryByParent' - Map of all Categories by thier corresponding Parent Category.
-         *               : 'strPageName' - Page Name given while embedding the component on the Salesforce.
+         *               : 'strPageName' - Instance Name given while embedding the component on the Salesforce.
         **/
         saveCategories({
             list_SubcategoriesSelected: listFinalCategories,

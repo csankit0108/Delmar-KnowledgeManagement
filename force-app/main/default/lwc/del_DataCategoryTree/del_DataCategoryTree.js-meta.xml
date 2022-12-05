@@ -2,6 +2,7 @@
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>55.0</apiVersion>
     <isExposed>true</isExposed>
+    <masterLabel>Instance Category Tree Component</masterLabel>
     <targets>
         <target>lightning__RecordPage</target>
         <target>lightning__AppPage</target>
@@ -12,9 +13,16 @@
 
     <targetConfigs>  
         <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage,lightningCommunity__Default">
-            <property name="strPageName" type="String" label="Page Name" required="true" />
+            <property name="showExpandCollpaseButton" type="Boolean" default="true" label="Show Expand/Collapse Button"/>
+            <property name="strPageName" type="String" label="Instance Name" required="true" />
+            <property name="intTableHeight" type="Integer" label="Height of Component" default="30"/>
+            <property name="strFontColor" type="String" label="Knowledge Articles Font Color" placeholder="Enter color value in HEX format" default="#0000ff"/>
+            <property name="strFontWeight" type="String" datasource="normal,bold,bolder,thinner" label="Font Weight" default="normal"/>
+            <property name="strFontStyle" type="String" datasource="normal,italic" label="Font Style" default="normal"/>
+            <property name="blnSetUnderline" type="Boolean" label="Add underline to article names" default="true"/>
         </targetConfig>
     </targetConfigs>
+
 
     
 </LightningComponentBundle>

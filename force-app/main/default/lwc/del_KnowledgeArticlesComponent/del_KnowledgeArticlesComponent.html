@@ -12,6 +12,10 @@
 *
 -->
 <template>
+    <div if:true={blnIsLoading}>
+        <lightning-spinner alternative-text="Loading..." variant="brand" class="slds-is-fixed">
+        </lightning-spinner>
+    </div>
     <lightning-card>
         <div class="c-container">
             <lightning-layout>
@@ -20,7 +24,7 @@
                     <lightning-card title={strAvailableCategoriesTreeTitle}>
                         <lightning-button-stateful name="treegrid" variant="neutral" label-when-off={strExpandAllButtonLabel}
                             label-when-on={strCollapseAllButtonLabel} selected={blnSelectedExpandCollapseTreeGrid} onclick={handleClickExpandCollapse}
-                            slot="actions" class="slds-var-m-horizontal_x-small">
+                            slot="actions">
                         </lightning-button-stateful>
                         <div  class="slds-box slds-scrollable" style="height: 25rem;">
                             <template if:true={blnShowTreeGrid}>
@@ -35,9 +39,9 @@
                     <lightning-card title={strSelectedCategoriesTreeTitle}>
                         <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandAllButtonLabel}
                             label-when-on={strCollapseAllButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}
-                            slot="actions" class="slds-var-m-horizontal_x-small">
+                            slot="actions">
                         </lightning-button-stateful>
-                        <div class="slds-box" style="height: 25rem;">
+                        <div class="slds-box" style="height: 25rem">
                             <div>
                                 <c-tree items={list_SelectedCategories} onselect={handleCategorySelect} draggable={blnDraggable}></c-tree>
                             </div>
@@ -46,11 +50,11 @@
                 </lightning-layout-item>
             </lightning-layout>
         </div>
-        <lightning-card title={strKnowledgeArticleTableTitle}>
+        <lightning-card title={strKnowledgeArticleTableTitle} class="del-card">
             <lightning-layout multiple-rows="false">
                 <template if:true={list_KnowledgeArticles}>
                     <lightning-layout-item size="12" class="del-table-scrollable slds-p-horizontal_small">
-                        <table aria-multiselectable="true" title="Arrange Articles" >
+                        <table aria-multiselectable="true" title="Arrange Articles">
                             <thead>
                                 <tr class="slds-line-height_reset">
                                     <th scope="col">
@@ -81,7 +85,7 @@
                         </table>
                     </lightning-layout-item>
                 </template>
-                <lightning-layout-item size="12" class="slds-align_absolute-center">
+                <lightning-layout-item size="12" class="slds-align_absolute-center" padding="around-small">
                     <template if:true={visibleSaveButton}>
                         <lightning-button variant="brand-outline" label={strResetButtonLabel} title="Reset" onclick={handleOnReset}
                         disabled={blnIsResetDisabled} class="slds-var-m-left_x-small slds-var-p-top_x-small">

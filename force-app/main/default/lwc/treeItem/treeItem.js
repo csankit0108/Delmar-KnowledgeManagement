@@ -37,6 +37,10 @@ export default class cTreeItem extends LightningElement {
     @api isLeaf;
     @api selected;
     @api draggable;
+    @api strFontWeight;
+    @api strFontStyle;
+    @api blnSetUnderline;
+    @api strFontColor;
 
     @api get childItems() {
         return this._children;
@@ -76,6 +80,26 @@ export default class cTreeItem extends LightningElement {
         );
 
         this.addEventListener('keydown', this.handleKeydown.bind(this));
+        var css = this.template.host.style;
+        if (this.strFontWeight  != null || this.strFontWeight != undefined) {
+            css.setProperty('--strFontWeight', this.strFontWeight);
+        }
+
+        if (this.strFontStyle  != null || this.strFontStyle != undefined) {
+            css.setProperty('--strFontStyle', this.strFontStyle);
+        }
+
+        if (this.blnSetUnderline  != null || this.blnSetUnderline != undefined) {
+            if(this.blnSetUnderline == true) {
+                css.setProperty('--blnSetUnderline', 'underline');
+            } else {
+                css.setProperty('--blnSetUnderline', 'none');
+            }
+        }
+
+        if (this.strFontColor  != null || this.strFontColor != undefined) {
+            css.setProperty('--strFontColor', this.strFontColor);
+        }
     }
 
     renderedCallback() {

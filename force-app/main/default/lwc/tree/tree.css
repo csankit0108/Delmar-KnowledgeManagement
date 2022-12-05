@@ -1,3 +1,7 @@
 :host {
     --slds-c-tree-sizing-max-width : 100%;
 }
+
+.del-tree {
+    height: var(--treeHeight,20.8rem);
+}

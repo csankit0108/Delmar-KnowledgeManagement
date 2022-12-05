@@ -15,3 +15,17 @@
     -o-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out;
 }
+
+u {
+    text-decoration: var(--blnSetUnderline,none);
+}
+
+u:hover {
+    text-decoration: underline;
+}
+
+.del-treeItem {
+    font-style: var(--strFontStyle, normal);
+    font-weight: var(--strFontWeight,normal);
+    color: var(--strFontColor,#0000FF);
+}

@@ -43,7 +43,7 @@ public class DEL_KnowledgeManagementControllerTest {
         insert objKnowledgeConfiguration3;
 
         DEL_KnowledgeConfiguration__c objKnowledgeConfiguration4 = new DEL_TestUtility.KnowledgeConfigurationBuilder()
-            .setCategoryName('About DCMS')
+            .setCategoryName('Client_About_DCMS')
             .setSortOrder(1)
             .setPageName('Admin_Setup')
             .setParentCategory(objKnowledgeConfiguration3.Id)

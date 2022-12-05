@@ -43,18 +43,24 @@
                 </template>
                 <template if:false={blnIsEditMode}>
                     <lightning-layout-item size="12" small-device-size="12" medium-device-size="12" large-device-size="12"
-                        padding="around-small" class="slds-p-top_none">
+                        padding="around-small" class="slds-p-vertical_none">
                         <lightning-card title={strTitleForCustomerComponent}>
-                            <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandButtonLabel}
-                                label-when-on={strCollapseButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}
-                                slot="actions" class="slds-var-m-horizontal_x-small">
-                            </lightning-button-stateful>
-                            <template if:true={blnEditVisible}>
-                                <lightning-button label={strEditCategoriesButtonLabel} onclick={handleEditCategories} slot="actions"></lightning-button>
+                            <template if:true={showExpandCollpaseButton}>
+                                <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandButtonLabel} slot="actions"
+                                    label-when-on={strCollapseButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}>
+                                </lightning-button-stateful>
                             </template>
-                            <div class="slds-box del-tree-box">
+                            <template if:true={blnEditVisible}>
+                                <lightning-button label={strEditCategoriesButtonLabel} onclick={handleEditCategories} slot="actions"
+                                    class="slds-var-m-left_x-small">
+                                </lightning-button>
+                            </template>
+                            <div class="del-tree-box">
                                 <p>
-                                    <c-tree items={list_Categories} onselect={handleOnSelect} draggable={blnDraggable}></c-tree>
+                                    <c-tree table-height={intTableHeight} str-font-weight={strFontWeight} str-font-color={strFontColor} 
+                                        bln-set-underline={blnSetUnderline} str-font-style={strFontStyle} items={list_Categories} 
+                                        onselect={handleOnSelect} draggable={blnDraggable}>
+                                    </c-tree>
                                 </p>
                             </div>
                         </lightning-card>

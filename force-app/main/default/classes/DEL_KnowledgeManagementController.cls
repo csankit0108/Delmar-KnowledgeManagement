@@ -17,7 +17,7 @@ public with sharing class DEL_KnowledgeManagementController {
     public static Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationsByName;
 
     //Map of SubCategories by their Unique Name
-    public static Map<String, String> map_SubCategoriesByUniqueName = new Map<String, String>();
+    public static Map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
 
     
     /**
@@ -33,6 +33,8 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public Map<String, String> map_CategoryByParent = new Map<String, String>();
         //List of Top level category names
         @AuraEnabled public List<String> list_ParentCategoryNames = new List<String>();
+        //List of Group Category Names
+        @AuraEnabled public List<String> list_GroupCategoryNames = new List<String>();
         //List of previously sorted category names
         @AuraEnabled public List<String> list_DefaultSortedCategories = new List<String>();
         //List of previously sorted sub category names
@@ -42,8 +44,8 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public List<CategoryWrapper> list_AllCategories = new List<CategoryWrapper>();
         //Map all published Knowledge Articles based on Category Unique Name      
         @AuraEnabled public Map<String, List<Knowledge__kav>> map_KnowledgeArticlesByCategoryUniqueName = new Map<String, List<Knowledge__kav>>();
-        //Map all Sub-Category Unique Name By it's Label Name
-        @AuraEnabled public map<String, String> map_SubCategoriesByUniqueName = new Map<String, String>();
+        //Map all Category Unique Name By it's Label Name
+        @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
     }
@@ -72,8 +74,10 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public Map<String, List<Knowledge__kav>> map_ArticlesByCategoryName = new Map<String, List<Knowledge__kav>>();
         @AuraEnabled public List<DEL_KnowledgeConfiguration__c> list_AvailableCategories = new List<DEL_KnowledgeConfiguration__c>();
         @AuraEnabled public List<DEL_KnowledgeConfiguration__c> list_SelectedCategories = new List<DEL_KnowledgeConfiguration__c>();
+        //List of Group Category Names
+        @AuraEnabled public List<String> list_GroupCategoryNames = new List<String>();
         //Map all Sub-Category Unique Name By it's Label Name
-        @AuraEnabled public map<String, String> map_SubCategoriesByUniqueName = new Map<String, String>();
+        @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
     }
@@ -253,9 +257,6 @@ public with sharing class DEL_KnowledgeManagementController {
                         }
                     }
                 }
-                
-                system.debug('map_ConfigsByPageName:: ' +map_ConfigsByPageName);
-                system.debug('map_ConfigsByName:: ' +map_ConfigsByName);
 
                 //Making the call to the describeDataCategoryGroups to
                 //get the list of category groups associated
@@ -292,6 +293,9 @@ public with sharing class DEL_KnowledgeManagementController {
                     
                     //Get the description of the data category group
                     singleResult.getDescription();
+
+                    map_CategoriesByUniqueName.put(singleResult.getName(), singleResult.getLabel());
+                    objWrapper.list_GroupCategoryNames.add(singleResult.getName());
                     
                     //Get the top level categories
                     DataCategory [] list_TopLevelCategories = singleResult.getTopCategories();
@@ -300,22 +304,23 @@ public with sharing class DEL_KnowledgeManagementController {
                         if (category.getName() == 'All') {
                             list_ParentCategories = category.getChildCategories();
                             for (DataCategory topLevelCategory : list_ParentCategories) {
+                                
                                 if (
                                     map_ConfigsByPageName.containsKey('Admin_Setup') &&
-                                    map_ConfigsByPageName.get('Admin_Setup').contains(topLevelCategory.getLabel())
+                                    map_ConfigsByPageName.get('Admin_Setup').contains(topLevelCategory.getName())
                                 ) {
-                                    system.debug('inside parent category addition for admin:: ' + map_ConfigsByName.get(topLevelCategory.getLabel()));
-                                    objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()+'Admin_Setup'));
+                                    objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getName()+'Admin_Setup'));
                                 }
                                 
                                 if (
                                     map_ConfigsByPageName.containsKey(strPageName) && 
-                                    map_ConfigsByPageName.get(strPageName).contains(topLevelCategory.getLabel())
+                                    map_ConfigsByPageName.get(strPageName).contains(topLevelCategory.getName())
                                 ) {
-                                    system.debug('inside parent category addition for page:: ' + map_ConfigsByName.get(topLevelCategory.getLabel()));
-                                    objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()+strPageName));
+                                    objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getName()+strPageName));
                                 }
                                 
+                                map_CategoryByParent.put(topLevelCategory.getName(), singleResult.getName());
+
                                 List<DataCategory> list_Subcategories = new List<DataCategory>();
                                 List<String> list_SubcategoryNames = new List<String>();
                                 getAllCategories(
@@ -326,23 +331,23 @@ public with sharing class DEL_KnowledgeManagementController {
                                 );
                                 for (DataCategory objSubcategory : list_Subcategories) {
                                     CategoryWrapper objCategoryWrapper = new CategoryWrapper();
-                                    objCategoryWrapper.name = objSubcategory.getLabel();
+                                    objCategoryWrapper.name = objSubcategory.getName();
                                     if (
                                         map_ConfigsByPageName.containsKey('Admin_Setup') &&
-                                        map_ConfigsByPageName.get('Admin_Setup').contains(objSubcategory.getLabel())
+                                        map_ConfigsByPageName.get('Admin_Setup').contains(objSubcategory.getName())
                                     ) {
-                                        objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()+'Admin_Setup'));
+                                        objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(objSubcategory.getName()+'Admin_Setup'));
                                         //objWrapper.list_AvailableCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
                                     }
                                     
                                     if (
                                         map_ConfigsByPageName.containsKey(strPageName) && 
-                                        map_ConfigsByPageName.get(strPageName).contains(objSubcategory.getLabel())
+                                        map_ConfigsByPageName.get(strPageName).contains(objSubcategory.getName())
                                     ) {
-                                        objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(objSubcategory.getLabel()+strPageName));
+                                        objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(objSubcategory.getName()+strPageName));
                                         // objWrapper.list_SelectedCategories.add(map_ConfigsByName.get(topLevelCategory.getLabel()));
                                     }
-                                    list_SubcategoryNames.add(objSubcategory.getLabel());
+                                    list_SubcategoryNames.add(objSubcategory.getName());
                                 }
   
                             }
@@ -353,19 +358,12 @@ public with sharing class DEL_KnowledgeManagementController {
                 if (objWrapper.list_SelectedCategories.isEmpty()) {
 	                 objWrapper.list_SelectedCategories = objWrapper.list_AvailableCategories;
                 }
-                system.debug('Available Categories:: ' + objWrapper.list_AvailableCategories);
-                system.debug('Selected Categories:: ' + objWrapper.list_SelectedCategories);
+
                 objWrapper.map_ArticlesByCategoryName = getAllKnowledgeArticles();
                 objWrapper.map_CategoryByParent = map_CategoryByParent;
-                objWrapper.map_SubCategoriesByUniqueName = map_SubCategoriesByUniqueName;
+                objWrapper.map_CategoriesByUniqueName = map_CategoriesByUniqueName;
                 Id idUserId = UserInfo.getUserId();
-                objWrapper.objUserInformation = [SELECT 
-                                                 Id,
-                                                 Name,
-                                                 UserPermissionsKnowledgeUser
-                                                 FROM User 
-                                                 WHERE Id = :idUserId
-                                                 AND IsActive = true];
+                objWrapper.objUserInformation = getCurrentUserDetails(idUserId);
                 return objWrapper;
             } catch(Exception objException) {
                 DEL_Utils.logException(
@@ -434,7 +432,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 //describeDataCategoryGroupStructures()
                 describeCategoryStructureResult = 
                     Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
-                
+                system.debug('describeCategoryStructureResult :: '+describeCategoryStructureResult);
                 //Getting data from the result
                 for(DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
                     //Get name of the associated Sobject
@@ -448,10 +446,15 @@ public with sharing class DEL_KnowledgeManagementController {
                     
                     //Get the description of the data category group
                     singleResult.getDescription();
+
+                    map_CategoriesByUniqueName.put(singleResult.getName(), singleResult.getLabel());
+                    objWrapper.list_GroupCategoryNames.add(singleResult.getName());
+                    CategoryWrapper objCategoryWrapperGroup = new CategoryWrapper();
+                    objCategoryWrapperGroup.name = singleResult.getName();
+                    objWrapper.list_AllCategories.add(objCategoryWrapperGroup);
                     
                     //Get the top level categories
                     DataCategory [] list_TopLevelCategories = singleResult.getTopCategories();
-                    system.debug('list_TopLevelCategories size:: ' + list_TopLevelCategories.size());
                     if (!list_TopLevelCategories.isEmpty()) {
                         DataCategory category = list_TopLevelCategories[0];
                         if (category.getName() == 'All') {
@@ -459,43 +462,38 @@ public with sharing class DEL_KnowledgeManagementController {
                             for (DataCategory topLevelCategory : list_ParentCategories) {
                                 List<DataCategory> list_Subcategories = new List<DataCategory>();
                                 List<String> list_SubcategoryNames = new List<String>();
+                                if (map_ChildCategoriesByParent.containsKey(singleResult.getName())) {
+                                    map_ChildCategoriesByParent.get(singleResult.getName()).add(topLevelCategory.getName());
+                                } else {
+                                    map_ChildCategoriesByParent.put(singleResult.getName(),new List<String>{topLevelCategory.getName()});
+                                }
+                                map_CategoryByParent.put(topLevelCategory.getName(), singleResult.getName());
                                 getAllCategories(
                                     new List<DataCategory> { topLevelCategory }, 
                                     map_CategoryByParent,
                                     list_Subcategories,
                                     map_ChildCategoriesByParent
                                 );
+                                map_CategoriesByUniqueName.put(topLevelCategory.getName(), topLevelCategory.getLabel());
                                 for (DataCategory objSubcategory : list_Subcategories) {
                                     CategoryWrapper objCategoryWrapper = new CategoryWrapper();
-                                    objCategoryWrapper.name = objSubcategory.getLabel();
+                                    objCategoryWrapper.name = objSubcategory.getName();
                                     objWrapper.list_AllCategories.add(objCategoryWrapper);
-                                    list_SubcategoryNames.add(objSubcategory.getLabel());
+                                    list_SubcategoryNames.add(objSubcategory.getName());
                                 }
 
                                 objWrapper.map_CategoriesByTopLevelCategories.put(
-                                    topLevelCategory.getLabel(), 
+                                    topLevelCategory.getName(), 
                                     list_SubcategoryNames
-                                );                         
+                                );
                             }
                         }
                     }
 
                     objWrapper.map_ChildCategoriesByParent = map_ChildCategoriesByParent;
-                    System.debug('map of parent and child categories :: ' + map_ChildCategoriesByParent);
                     objWrapper.map_CategoryByParent = map_CategoryByParent;
-                    system.debug('sorted subcategories :: ' + objWrapper.list_DefaultSortedSubcategories);
-                    system.debug('map_CategoriesByTopLevelCategories:: ' + objWrapper.map_CategoriesByTopLevelCategories);
-                    system.debug('map_CategoriesByTopLevelCategories keyset:: ' + objWrapper.map_CategoriesByTopLevelCategories.keySet());
-                    system.debug('map_CategoriesByTopLevelCategories values:: ' + objWrapper.map_CategoriesByTopLevelCategories.values().size());
-                    for (String strparent : objWrapper.map_CategoriesByTopLevelCategories.keySet()) {
-                        system.debug('strparent ' + strparent);
-                        for (String d :  objWrapper.map_CategoriesByTopLevelCategories.get(strparent)) {
-                            system.debug('values inside map:: ' + d);
-                        }
-                    }
-                    
-                    List<DataCategory> childCategoryList = new List<DataCategory>();
                 }
+
                 objWrapper.list_ParentCategoryNames.addAll(objWrapper.map_CategoriesByTopLevelCategories.keySet());
                 for (String strparent : objWrapper.map_CategoriesByTopLevelCategories.keySet()) {
                     CategoryWrapper objCategoryWrapper = new CategoryWrapper();
@@ -503,15 +501,9 @@ public with sharing class DEL_KnowledgeManagementController {
                     objWrapper.list_AllCategories.add(objCategoryWrapper);
                 }
                 objWrapper.map_KnowledgeArticlesByCategoryUniqueName = getAllKnowledgeArticles();
-                objWrapper.map_SubCategoriesByUniqueName = map_SubCategoriesByUniqueName;
+                objWrapper.map_CategoriesByUniqueName = map_CategoriesByUniqueName;
                 Id idUserId = UserInfo.getUserId();
-                objWrapper.objUserInformation = [SELECT 
-                                                 Id,
-                                                 Name,
-                                                 UserPermissionsKnowledgeUser
-                                                 FROM User 
-                                                 WHERE Id = :idUserId
-                                                 AND IsActive = true];
+                objWrapper.objUserInformation = getCurrentUserDetails(idUserId);
 
             } catch (Exception objException) {
                 DEL_Utils.logException(
@@ -545,22 +537,19 @@ public with sharing class DEL_KnowledgeManagementController {
             DataCategory [] categoriesClone = categories.clone();
             DataCategory category = categoriesClone[0];
             for (DataCategory subcategory : category.getChildCategories()) {
-                if (map_ChildCategoriesByParent.containsKey(category.getLabel())) {
-                    map_ChildCategoriesByParent.get(category.getLabel()).add(subcategory.getLabel());
+                if (map_ChildCategoriesByParent.containsKey(category.getName())) {
+                    map_ChildCategoriesByParent.get(category.getName()).add(subcategory.getName());
                 } else {
-                    map_ChildCategoriesByParent.put(category.getLabel(), new List<String> {subcategory.getLabel()});
+                    map_ChildCategoriesByParent.put(category.getName(), new List<String> {subcategory.getName()});
                 }
-                map_CategoryByParent.put(subcategory.getLabel(), category.getLabel());
+                map_CategoryByParent.put(subcategory.getName(), category.getName());
             }
-            map_SubCategoriesByUniqueName.put(category.getLabel(), category.getName());
+            map_CategoriesByUniqueName.put(category.getName(), category.getLabel());
 
             categoriesClone.remove(0);
-            system.debug('inner category:: ' + category.getLabel());
-            system.debug('child category:: ' + category.getChildCategories());
             categoriesClone.addAll(category.getChildCategories());
             allCategories.addAll(category.getChildCategories());
             getAllCategories(categoriesClone, map_CategoryByParent, allCategories, map_ChildCategoriesByParent);
-            system.debug('allCategories:: '+allCategories);
         }
     }
 
@@ -578,7 +567,6 @@ public with sharing class DEL_KnowledgeManagementController {
         ) {
         if(!list_ConfigsForDeletion.isEmpty()) {
             DEL_KnowledgeConfiguration__c objConfig = list_ConfigsForDeletion[0];
-            System.debug('objConfig :: '+objConfig);
             if (!list_ConfigurationsToDelete.contains(objConfig)) {
                 list_ConfigurationsToDelete.add(objConfig);
             }
@@ -609,8 +597,10 @@ public with sharing class DEL_KnowledgeManagementController {
         List<Knowledge__DataCategorySelection> list_KnowledgeArticlesWithCategory = new List<Knowledge__DataCategorySelection>();
         Map<Id, String> map_KnowledgeArticleIdByCategoryName = new Map<Id, String>();
         Map<String, List<Knowledge__kav>> map_KnowledgeArticlesByCategoryName = new Map<String, List<Knowledge__kav>>();
+        Map<Id, Id> map_KnowledgeRecordIdByKnowledgeArticleId = new Map<Id, Id>();
 
-        list_KnowledgeArticlesWithCategory = [SELECT Id, 
+        list_KnowledgeArticlesWithCategory = [SELECT 
+                                              Id, 
                                               ParentId, 
                                               DataCategoryGroupName, 
                                               DataCategoryName 
@@ -629,19 +619,30 @@ public with sharing class DEL_KnowledgeManagementController {
                                                        WHERE Id IN :map_KnowledgeArticleIdByCategoryName.keySet()
                                                        AND PublishStatus = 'Online'
                                                        ORDER BY SortOrder__c];
-        
-        
         for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
-            List<Knowledge__kav> list_KnowledgeArticlesTemp = new List<Knowledge__kav>();
-            if (map_KnowledgeArticleIdByCategoryName.containsKey(objKnowledgeArticle.Id)) {
-                String CategoryName = map_KnowledgeArticleIdByCategoryName.get(objKnowledgeArticle.Id);
-                if (!map_KnowledgeArticlesByCategoryName.containsKey(CategoryName)) {
-                    list_KnowledgeArticlesTemp.add(objKnowledgeArticle);
-                } else {
-                    list_KnowledgeArticlesTemp = map_KnowledgeArticlesByCategoryName.get(CategoryName);
-                    list_KnowledgeArticlesTemp.add(objKnowledgeArticle);
-                }
-                map_KnowledgeArticlesByCategoryName.put(CategoryName, list_KnowledgeArticlesTemp);
+            map_KnowledgeRecordIdByKnowledgeArticleId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle.Id);
+        }
+
+        List<Knowledge__kav> list_KnowledgeArticlesNew = [SELECT 
+                                                          Id, 
+                                                          KnowledgeArticleId, 
+                                                          SortOrder__c, 
+                                                          Title, 
+                                                          PublishStatus, 
+                                                          VersionNumber, 
+                                                          Language, 
+                                                          IsMasterLanguage
+                                                          FROM Knowledge__kav
+                                                          WHERE KnowledgeArticleId IN :map_KnowledgeRecordIdByKnowledgeArticleId.keySet()
+                                                          AND PublishStatus = 'Online'
+                                                          ORDER BY SortOrder__c];
+
+        for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticlesNew) {
+            String strCategoryName = map_KnowledgeArticleIdByCategoryName.get(map_KnowledgeRecordIdByKnowledgeArticleId.get(objKnowledgeArticle.KnowledgeArticleId));
+            if (!map_KnowledgeArticlesByCategoryName.containsKey(strCategoryName)) {
+                map_KnowledgeArticlesByCategoryName.put(strCategoryName, new List<Knowledge__kav>{ objKnowledgeArticle });
+            } else {
+                map_KnowledgeArticlesByCategoryName.get(strCategoryName).add(objKnowledgeArticle);
             }
         }
         return map_KnowledgeArticlesByCategoryName;
@@ -658,18 +659,41 @@ public with sharing class DEL_KnowledgeManagementController {
         List<Id> list_DraftArticleIds = new List<Id>();
         List<Id> list_KnowledgeArticlesIds = new List<Id>();
         List<Knowledge__kav> list_DraftKnowledgeArticles = new List<Knowledge__kav>();
-
+        
         try {
             if (list_KnowledgeArticles.size() > 0) {
                 for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
                     map_KnowledgeArticleByKnowledgeId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle);
-                    Id idDraftArticle = KbManagement.PublishingService.editOnlineArticle(objKnowledgeArticle.KnowledgeArticleId, false);
+                }
+                List<Knowledge__kav> list_KnowledgeArticlesNew = [SELECT 
+                                                                  Id, 
+                                                                  KnowledgeArticleId, 
+                                                                  SortOrder__c, 
+                                                                  Title, 
+                                                                  PublishStatus, 
+                                                                  VersionNumber, 
+                                                                  Language, 
+                                                                  IsMasterLanguage
+                                                                  FROM Knowledge__kav
+                                                                  WHERE KnowledgeArticleId IN :map_KnowledgeArticleByKnowledgeId.keySet()
+                                                                  AND PublishStatus = 'Online'];
+
+                for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticlesNew) {
+                    Id idDraftArticle;
+                    if (!objKnowledgeArticle.IsMasterLanguage) {
+                        idDraftArticle = KbManagement.PublishingService.editPublishedTranslation(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle.Language, false);
+                    } else {
+                        idDraftArticle = KbManagement.PublishingService.editOnlineArticle(objKnowledgeArticle.KnowledgeArticleId, false);
+                    }
                     list_DraftArticleIds.add(idDraftArticle);
                 }
+
                 list_DraftKnowledgeArticles = [SELECT 
                                                Id,
                                                KnowledgeArticleId, 
-                                               VersionNumber
+                                               VersionNumber, 
+                                               Language,
+                                               IsMasterLanguage
                                                FROM Knowledge__kav
                                                WHERE Id IN :list_DraftArticleIds];
                 for (Knowledge__kav objDraftKnowledgeArticle : list_DraftKnowledgeArticles) {
@@ -681,8 +705,13 @@ public with sharing class DEL_KnowledgeManagementController {
                 }
                 
                 for (Knowledge__kav objKnowledgeArticle : list_DraftKnowledgeArticles) {
-                    Id idNewUpdatedArticle = objKnowledgeArticle.KnowledgeArticleId;
-                    KbManagement.PublishingService.publishArticle(idNewUpdatedArticle, false);
+                    if (!objKnowledgeArticle.IsMasterLanguage) {
+                        Id idNewUpdatedArticle = objKnowledgeArticle.Id;
+                        KbManagement.PublishingService.completeTranslation(idNewUpdatedArticle);
+                    } else {
+                        Id idNewUpdatedArticle = objKnowledgeArticle.KnowledgeArticleId;
+                        KbManagement.PublishingService.publishArticle(idNewUpdatedArticle, false);
+                    }
                 }
             }
         } catch (Exception objException) {
@@ -705,28 +734,94 @@ public with sharing class DEL_KnowledgeManagementController {
      **/
     @AuraEnabled(cacheable = true)
     public static Map<String, Knowledge__kav> DEL_Nxtprev (Id recordId) {
-        Knowledge__kav objKnowledgeArticle = new Knowledge__kav();
-        objKnowledgeArticle= [SELECT Id,Title,KnowledgeArticleId,PublishStatus,VersionNumber,SortOrder__c FROM Knowledge__kav WHERE PublishStatus='Online' AND Id = :recordId];
-        System.debug(objKnowledgeArticle); 
-        Knowledge__DataCategorySelection objDataCategory = new Knowledge__DataCategorySelection();
-        objDataCategory=[SELECT Id,DataCategoryGroupName,DataCategoryName FROM Knowledge__DataCategorySelection WHERE ParentId= :recordId];
-        System.debug(objDataCategory);
-        String groupName=objDataCategory.DataCategoryGroupName + '__c';
-        String subCategory=objDataCategory.DataCategoryName + '__c';
-        String strQuery = 'SELECT Id,Title,KnowledgeArticleId,PublishStatus,VersionNumber,SortOrder__c FROM Knowledge__kav WHERE PublishStatus=\'Online\' WITH DATA CATEGORY '+groupName +' AT '+subCategory +' ORDER BY SortOrder__c';
-        List<Knowledge__kav> filteredArticles =Database.query(strQuery);
-        Map<String, Knowledge__kav> articles = new Map<String, Knowledge__kav>();
-        for (Knowledge__kav objKnowledgeArticleVersion : filteredArticles) {
-            if (String.isNotBlank(String.valueOf(objKnowledgeArticleVersion.SortOrder__c)) &&
-                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) ) {
-                if (objKnowledgeArticleVersion.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1)) {
-                    articles.put('previous', objKnowledgeArticleVersion);
+        Knowledge__kav objKnowledgeArticle = [SELECT 
+                                              Id, 
+                                              Title, 
+                                              KnowledgeArticleId, 
+                                              PublishStatus, 
+                                              VersionNumber, 
+                                              SortOrder__c,
+                                              Language,
+                                              IsMasterLanguage
+                                              FROM Knowledge__kav 
+                                              WHERE PublishStatus = 'Online' 
+                                              AND Id = :recordId];
+
+        Knowledge__kav objKnowledgeArticleMasterLanguage = [SELECT 
+                                                            Id, 
+                                                            Title, 
+                                                            KnowledgeArticleId
+                                                            FROM Knowledge__kav 
+                                                            WHERE PublishStatus = 'Online' 
+                                                            AND KnowledgeArticleId = :objKnowledgeArticle.KnowledgeArticleId
+                                                            AND IsMasterLanguage = true 
+                                                            LIMIT 1];
+
+        Knowledge__DataCategorySelection objDataCategory = [SELECT 
+                                                            Id, 
+                                                            DataCategoryGroupName, 
+                                                            DataCategoryName 
+                                                            FROM Knowledge__DataCategorySelection 
+                                                            WHERE ParentId = :objKnowledgeArticleMasterLanguage.Id];
+
+        String groupName = objDataCategory.DataCategoryGroupName + '__c';
+        String subCategory = objDataCategory.DataCategoryName + '__c';
+        String strQuery = 'SELECT Id, Title, KnowledgeArticleId, PublishStatus, VersionNumber, IsMasterLanguage, Language, SortOrder__c FROM Knowledge__kav WHERE PublishStatus=\'Online\' WITH DATA CATEGORY '+groupName +' AT '+subCategory +' ORDER BY SortOrder__c';
+        List<Knowledge__kav> filteredArticles = Database.query(strQuery);
+
+        Map<String, Knowledge__kav> map_articlesByNextPrevious = new Map<String, Knowledge__kav>();
+        
+        for (Knowledge__kav objKnowledgeArticleFiltered: filteredArticles) {
+            if (String.isNotBlank(String.valueOf(objKnowledgeArticleFiltered.SortOrder__c)) &&
+                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) 
+            ) {
+                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1) &&
+                    objKnowledgeArticleFiltered.IsMasterLanguage
+                ) {
+                    map_articlesByNextPrevious.put('previous', objKnowledgeArticleFiltered);
                 }
-                if (objKnowledgeArticleVersion.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1)) {
-                    articles.put('next', objKnowledgeArticleVersion);
+                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1) &&
+                    objKnowledgeArticleFiltered.IsMasterLanguage
+                ) {
+                    map_articlesByNextPrevious.put('next', objKnowledgeArticleFiltered);
                 }
             }
         }
-       return articles;
+        for (Knowledge__kav objKnowledgeArticleFiltered: filteredArticles) {
+            if (String.isNotBlank(String.valueOf(objKnowledgeArticleFiltered.SortOrder__c)) &&
+                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) 
+            ) {
+                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1) &&
+                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+                ) {
+                    map_articlesByNextPrevious.put('previous', objKnowledgeArticleFiltered);
+                }
+                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1) &&
+                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+                ) {
+                    map_articlesByNextPrevious.put('next', objKnowledgeArticleFiltered);
+                }
+            }
+        }
+
+        return map_articlesByNextPrevious;
+    }
+
+    /**
+    * @ author       :  Vinay kant
+    * @ description  :  This method will fetch current logged-in user information.
+    * @ params       :  'idUserId' - Current logged-in User Id.
+    **/
+    @AuraEnabled(cacheable=true)
+    public static User getCurrentUserDetails(Id idUserId) { 
+        return [SELECT 
+                Id,
+                Name,
+                IsPortalEnabled,
+                LanguageLocaleKey,
+                UserPermissionsKnowledgeUser
+                FROM User 
+                WHERE Id = :idUserId
+                AND IsActive = true];
     }
 }

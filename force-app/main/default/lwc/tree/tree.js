@@ -14,6 +14,11 @@ import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
 export default class cTree extends LightningElement {
     @api header;
     @api draggable;
+    @api tableHeight;
+    @api strFontWeight;
+    @api strFontStyle;
+    @api blnSetUnderline;
+    @api strFontColor;
     
     @track strTreeTitle = CLDEL00026;
     @track _currentFocusedItem = null;
@@ -80,6 +85,13 @@ export default class cTree extends LightningElement {
             'privateitemdragover',
             this.handleDragOver.bind(this)
         );*/
+    }
+
+    connectedCallback() {
+        if (this.tableHeight  != null || this.tableHeight != undefined) {
+            var css = this.template.host.style;
+            css.setProperty('--treeHeight', this.tableHeight+'rem');
+        }
     }
 
 

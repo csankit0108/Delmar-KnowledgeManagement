@@ -192,6 +192,7 @@ public class DEL_TestUtility {
             this.strPriority = '';
             this.strSuppliedEmail = '';
             this.strLanguage = '';
+            this.idOwnerId = UserInfo.getUserId();
         }
         
         public CaseBuilder setSubject(String strValue) {

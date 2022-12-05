@@ -5,6 +5,11 @@ import { NavigationMixin } from 'lightning/navigation';
 import getCategoryData from "@salesforce/apex/DEL_KnowledgeManagementController.getDescribeDataCategoryGroupStructureResults";
 import saveSelectedCategories from "@salesforce/apex/DEL_KnowledgeManagementController.saveCategories";
 import setknowledgeArticlesOrder from '@salesforce/apex/DEL_KnowledgeManagementController.setknowledgeArticlesOrder';
+
+//CLDEL00001 - "Error" (It stores the default title for error toast message.)
+import CLDEL00001 from "@salesforce/label/c.CLDEL00001";
+//CLDEL00007 - "Success" (It stores the title for success toast message.)
+import CLDEL00007 from "@salesforce/label/c.CLDEL00007";
 //CLDEL00019 - "Available Categories" (It stores the title for the available categories tree grid)
 import CLDEL00019 from "@salesforce/label/c.CLDEL00019";
 //CLDEL00020 - "Selected Categories(Drag/drop to reorder" (It stores the title for the selected categories tree)
@@ -23,47 +28,51 @@ import CLDEL00025 from "@salesforce/label/c.CLDEL00025";
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
 
 export default class Del_KnowledgeArticlesComponent extends NavigationMixin(LightningElement) {
+    
     strAvailableCategoriesTreeTitle = CLDEL00019;
     strSelectedCategoriesTreeTitle = CLDEL00020;
     strExpandAllButtonLabel = CLDEL00021;
     strCollapseAllButtonLabel = CLDEL00022;
     strResetButtonLabel = CLDEL00023;
     strSaveButtonLabel = CLDEL00024;
-    @track list_Categories = [];
-    map_CategoryByParent = [];
+
+    blnCollapse = false;
+    blnShowTreeGrid = false;
+    blnIsToggle = false;
+    blnDraggable = true;
+    blnIsTreeLoaded = false;
+    blnSelectedExpandCollapseTree = true;
+    blnSelectedExpandCollapseTreeGrid = false;
+
     wiredCategoryData;
+    dragStart;
+    map_knowledgeArticlesByCategory;
+    map_UniqueNameCategoriesByLabelName;
+
+    map_CategoryByParent = [];
+    map_NameToIndexMapping = [];
+    list_FinalSortedCategories = [];
+    list_GroupCategoryNames = [];
+    list_selectedConfigurationNames = [];
+    map_ChildCategoriesByParent = [];
+
+    @track blnIsLoading = false;
+    @track blnDisableSaveButton = true;
+    @track blnIsResetDisabled = true;
+    @track strKnowledgeArticleTableTitle;
+    @track list_KnowledgeArticles;
+    @track visibleSaveButton;
+    @track selectedTreeNode;
+    @track list_SelectedCategories = [];
+    @track list_Categories = [];
+    @track list_SelectedCategoryNames = [];
+    @track list_SelectedCategoryNamesBackup = [];
     @track gridColumns = [{
         type: 'text',
-        fieldName: 'name',
+        fieldName: 'categoryLabel',
         label: CLDEL00026
     }];
     @track gridData = [];
-    blnShowTreeGrid = false;
-    blnCollapse = false;
-    blnSelectedExpandCollapseTree = true;
-    blnSelectedExpandCollapseTreeGrid = false;
-    @track list_SelectedCategories = [];
-    map_NameToIndexMapping = [];
-    list_FinalSortedCategories = [];
-    blnIsToggle = false;
-    @track strKnowledgeArticleTableTitle;
-    blnDraggable = true;
-    @track list_SelectedCategoryNames = [];
-    @track list_SelectedCategoryNamesBackup = [];
-    @track list_KnowledgeArticles;
-    @track list_KnowledgeArticlesBackup = [];
-
-    map_knowledgeArticlesByCategory;
-    
-    map_UniqueNameCategoriesByLabelName;
-    dragStart;
-    @track blnDisableSaveButton = true;
-    @track visibleSaveButton;
-    @track selectedTreeNode;
-    map_ChildCategoriesByParent = [];
-    @track blnIsResetDisabled = true;
-    list_selectedConfigurationNames = [];
-    blnIsTreeLoaded = false;
 
     constructor() {
         super();
@@ -81,7 +90,6 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     }
 
     renderedCallback () {
-        console.log('inside rendered callback');
         this.blnIsTreeLoaded = true;
     }
 
@@ -108,27 +116,35 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             this.gridData =[];
             this.list_SelectedCategories = [];
             this.list_KnowledgeArticles = null;
+            this.strKnowledgeArticleTableTitle = null;
+            this.blnSelectedExpandCollapseTree = true;
+            this.blnSelectedExpandCollapseTreeGrid = false;
             console.log(result);
             let list_AllCategories = JSON.parse(JSON.stringify(data.list_AllCategories));
             this.map_CategoryByParent = data.map_CategoryByParent;
             this.list_SelectedCategoryNames = data.list_DefaultSortedCategories;
             this.list_SelectedCategoryNamesBackup = data.list_DefaultSortedCategories;
             this.list_selectedConfigurationNames = data.list_DefaultSortedCategories;
-            this.map_UniqueNameCategoriesByLabelName = data.map_SubCategoriesByUniqueName;
+            this.map_UniqueNameCategoriesByLabelName = data.map_CategoriesByUniqueName;
             this.map_ChildCategoriesByParent = JSON.parse(JSON.stringify(data.map_ChildCategoriesByParent));
             this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
-            this.map_knowledgeArticlesByCategoryTemp = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
+            this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
+
             if (data.hasOwnProperty("objUserInformation")) {
                 this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
+                this.filterKnowledgeArticles(data.objUserInformation.LanguageLocaleKey);
             }
 
             this.createTree(this.list_SelectedCategoryNames);
+
             this.map_NameToIndexMapping = list_AllCategories.reduce( (objMapNameToIndex, objCategoryName, index) => {
+                objCategoryName.categoryLabel = this.map_UniqueNameCategoriesByLabelName[objCategoryName.name];
                 objMapNameToIndex[objCategoryName.name] = index;
                 return objMapNameToIndex;
             }, {} );
+
             list_AllCategories.forEach(objCategoryName => {
-                let root;
+                let root = {};
                 if (!this.map_CategoryByParent[objCategoryName.name]) {
                     root = objCategoryName;
                     this.gridData.push(root);
@@ -146,13 +162,65 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             }
 
         } else if (error) {
-            console.log(error);
+            this.showToastMessage(CLDEL00001, error.body.message , 'error');
+            console.log(JSON.stringify(error));
         }
     }
 
     /**
+     * @ author      : Vinay kant
+     * @ description : This method will sort the Object based on 'SortOrder__c' attribute.
+     * @ params      : 'list_KnowledgeArticles' - List of Knowledge Articles records.
+    **/
+    sortObjectItems(list_KnowledgeArticles) {
+        return list_KnowledgeArticles.sort((objFirst, objSecond) => {
+                if (objFirst.hasOwnProperty('SortOrder__c') && objFirst.hasOwnProperty('SortOrder__c')) {
+                    var intFirstObjSortOrder = objFirst.SortOrder__c;
+                    var intSecondObjSortOrder = objSecond.SortOrder__c;
+                    if(intFirstObjSortOrder < intSecondObjSortOrder) return -1;
+                    if(intFirstObjSortOrder > intSecondObjSortOrder) return 1;
+                    return 0;
+                }
+            });
+    }
+
+    /**
+     * @ author      : Vinay kant
+     * @ description : This method will filter knowledge article records based on logged-in user preference language.
+     * @ params      : 'strUserLanguageCode' - Current logged-in user preference language code.
+    **/
+    filterKnowledgeArticles (strUserLanguageCode) {
+        Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
+            let listKnowledgeArticlesCategory = this.map_knowledgeArticlesByCategory[eachCategory];
+            let listKnowledgeArticlesTemp = [];
+            let map_ArticlesByKnowledgeArticleId = {};
+            for (let article of listKnowledgeArticlesCategory) {
+                let listArticle = []; 
+                if (!map_ArticlesByKnowledgeArticleId.hasOwnProperty(article.KnowledgeArticleId)) {
+                    listArticle.push(article);
+                    map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId] = listArticle;
+                } else {
+                    listArticle = map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId];
+                    listArticle.push(article);
+                }
+                map_ArticlesByKnowledgeArticleId[article.KnowledgeArticleId] = listArticle;
+            }
+            Object.keys(map_ArticlesByKnowledgeArticleId).forEach(idKnowledgeArticleId => {
+                let list_Articles = map_ArticlesByKnowledgeArticleId[idKnowledgeArticleId];
+                // let filtered_Articles = [...list_Articles].filter(article => article.Language === strUserLanguageCode);
+                // if (filtered_Articles.length < 1) {
+                let filtered_Articles = [...list_Articles].filter(article => article.IsMasterLanguage === true);
+                // }
+                listKnowledgeArticlesTemp.push(...filtered_Articles);
+            });
+            this.map_knowledgeArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
+        });
+        console.log(this.map_knowledgeArticlesByCategory);
+    }
+
+    /**
     *@ author      : Ankit C
-    *@ description : This method is used to assign the sort orders for selected categpries
+    *@ description : This method is used to assign the sort orders for selected categories.
     **/
     assignSortOrder(data) {
         for (let i=0; i<data.length; i++) {
@@ -214,26 +282,25 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                     this.list_KnowledgeArticles = null;
                     this.strKnowledgeArticleTableTitle = null;
                     this.selectedTreeNode = null;
-                    this.list_KnowledgeArticlesBackup = null;
                 }
 
                 this.list_SelectedCategoryNames.forEach(objSelectedCategoryName => {
                     list_SelectedCategoriesTemp.push({ 
-                        label :objSelectedCategoryName, 
-                        name :objSelectedCategoryName,
+                        label : this.map_UniqueNameCategoriesByLabelName[objSelectedCategoryName], 
+                        name : objSelectedCategoryName,
                         expanded: true 
                     });
                 });
                 this.list_SelectedCategoryNamesBackup = this.list_SelectedCategoryNames;
-                
+
                 let map_NameIndexMapping = list_SelectedCategoriesTemp.reduce((objMapNameToIndex, objCategoryName, index) => {
                     objMapNameToIndex[objCategoryName.name] = index;
                     return objMapNameToIndex;
                 }, {} );
 
                 list_SelectedCategoriesTemp.forEach(objSelectedCategory => {
-                    let root;
-                    if (!this.map_CategoryByParent[objSelectedCategory.name]) {
+                    let root = {};
+                    if (this.list_GroupCategoryNames.includes(this.map_CategoryByParent[objSelectedCategory.name])) {
                         root = objSelectedCategory;
                         this.list_SelectedCategories.push(root);
                     } else {
@@ -244,8 +311,9 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                     }
                 });
             } catch(error) {
-                console.log(error);
+                this.showToastMessage(CLDEL00001, error, 'error');
             }
+
             if(this.blnIsTreeLoaded) {
                 this.template.querySelector('c-tree').normalizeData(this.list_SelectedCategories);
             }
@@ -269,11 +337,10 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     handleCategorySelect(event) {
         this.list_KnowledgeArticles = [];
         this.selectedTreeNode = event.detail.name;
-        let strUniqueNameCategory = this.map_UniqueNameCategoriesByLabelName[this.selectedTreeNode];
-        if (this.map_knowledgeArticlesByCategory.hasOwnProperty(strUniqueNameCategory)) {
-            this.list_KnowledgeArticles = this.map_knowledgeArticlesByCategory[strUniqueNameCategory];
+        if (this.map_knowledgeArticlesByCategory.hasOwnProperty(this.selectedTreeNode)) {
+            this.list_KnowledgeArticles = this.map_knowledgeArticlesByCategory[this.selectedTreeNode];
             this.setSortOrderForKnowledgeArticles();
-            this.strKnowledgeArticleTableTitle = CLDEL00025 + " " + this.selectedTreeNode;
+            this.strKnowledgeArticleTableTitle = CLDEL00025 + " " + this.map_UniqueNameCategoriesByLabelName[this.selectedTreeNode];
         } else {
             this.list_KnowledgeArticles = null;
             this.strKnowledgeArticleTableTitle = null;
@@ -287,12 +354,13 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     *                article records on click of save button
     **/
     handleCategorySave() {
+        this.blnIsLoading = true;
         this.list_FinalSortedCategories = [];
         this.assignSortOrder(this.list_SelectedCategories);
         if (this.list_KnowledgeArticles) {
             this.setSortOrderForKnowledgeArticles();
         }
-        
+
         const promiseSaveArticlesAndCategories = new Promise((resolve, reject) => {
             let allRunSuccessfully = {};
 
@@ -347,14 +415,17 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                         and 'DEL_KnowledgemanagementController.saveCategories()' apex class methods execution. 
         **/
         promiseSaveArticlesAndCategories.then(message => {
-            this.showToastMessage('Success', message, 'success');
+            this.showToastMessage(CLDEL00007, message, 'success');
             refreshApex(this.wiredCategoryData);
+            this.blnIsLoading = false;
         }).catch(message => {
-            console.log(JSON.stringify(message));
-            this.showToastMessage('Error', message, 'error');
+            this.showToastMessage(CLDEL00001, message, 'error');
+            this.blnIsLoading = false;
         }).finally(() => {
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
+            this.strKnowledgeArticleTableTitle = null;
+            this.list_KnowledgeArticles = null;
         });
 
     }
@@ -382,31 +453,30 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
         let list_SelectedCategoriesTemp  = [];
         list_CategoryNames.forEach(objSelectedCategoryName => {
             list_SelectedCategoriesTemp.push({ 
-                label :objSelectedCategoryName, 
-                name :objSelectedCategoryName,
+                label : this.map_UniqueNameCategoriesByLabelName[objSelectedCategoryName], 
+                name : objSelectedCategoryName,
                 expanded: true 
             });
         });
-
+        
         let map_NameIndexMapping = list_SelectedCategoriesTemp.reduce((objMapNameToIndex, objCategoryName, index) => {
             objMapNameToIndex[objCategoryName.name] = index;
             return objMapNameToIndex;
         }, {} );
-        console.log('map_NameIndexMapping:: ' + JSON.stringify(map_NameIndexMapping));
+
         list_SelectedCategoriesTemp.forEach(objSelectedCategory => {
-            let root;
-            if (!this.map_CategoryByParent[objSelectedCategory.name]) {
+            let root = {};
+            if (this.list_GroupCategoryNames.includes(this.map_CategoryByParent[objSelectedCategory.name])) {
                 root = objSelectedCategory;
                 this.list_SelectedCategories.push(root);
             } else {
-                console.log('objSelectedCategory.name:: ' + objSelectedCategory.name + 'parent:: ' + this.map_CategoryByParent[objSelectedCategory.name]);
                 let objParentCategory = list_SelectedCategoriesTemp[map_NameIndexMapping[this.map_CategoryByParent[objSelectedCategory.name]]];
                 if (objParentCategory) {
                     objParentCategory.items = [...(objParentCategory["items"] || []), objSelectedCategory];
                 }
             }
         });
-
+        
         if(this.blnIsTreeLoaded) {
             this.template.querySelector('c-tree').normalizeData(this.list_SelectedCategories);
         }
@@ -426,7 +496,6 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                     list_Categories.push(strChildCategory);
                 }
             }
-            console.log('end of for');
             list_Categories.shift();
             this.fetchChildCategories(list_Categories, list_AllChildCategories);
             return list_AllChildCategories;
@@ -446,9 +515,7 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     *                for 'strSubcategory'
     **/
     getParentCategories(strSubcategory, list_AllParentNames) {
-        console.log('inside recursive function'+strSubcategory);
         if (this.map_CategoryByParent[strSubcategory]) {
-                console.log('this is a unique subcategory');
                 if (!list_AllParentNames.includes(this.map_CategoryByParent[strSubcategory])) {
                     list_AllParentNames.unshift(this.map_CategoryByParent[strSubcategory]);
                     this.getParentCategories(this.map_CategoryByParent[strSubcategory], list_AllParentNames);
@@ -482,7 +549,6 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             this.blnSelectedExpandCollapseTree = !this.blnSelectedExpandCollapseTree;
             this.changeExpandCollapse(this.list_SelectedCategories, this.blnSelectedExpandCollapseTree);
             this.template.querySelector('c-tree').normalizeData(this.list_SelectedCategories);
-            console.log(JSON.parse(JSON.stringify(this.list_SelectedCategories)));
         }
     }
 

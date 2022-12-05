@@ -18,7 +18,7 @@
                 </tr>
             </thead>
         </table>
-        <div class="slds-box slds-scrollable slds-p-around_none" style="height: 21.2rem;">
+        <div class="slds-box slds-scrollable slds-p-around_none del-tree">
         <c-tree-item
             if:true={hasChildren}
             class="slds-tree"
@@ -29,6 +29,10 @@
             child-items={children}
             focused-child={focusedChild}
             draggable={draggable}
+            str-font-weight={strFontWeight}
+            str-font-style={strFontStyle}
+            bln-set-underline={blnSetUnderline}
+            str-font-color={strFontColor}
         >
         </c-tree-item>
         </div>

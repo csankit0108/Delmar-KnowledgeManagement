@@ -100,7 +100,7 @@
                 <template if:false={isDisabled}>
                     <template if:true={blnIsUrl}>
                         <a href={href} tabindex="-1" role="presentation">
-                            <span class="slds-tree__item-label slds-truncate" title={label} style="color:blue"><u>{label}</u></span>
+                            <span class="slds-tree__item-label slds-truncate del-treeItem" title={label}><u>{label}</u></span>
                             <template if:true={metatext}>
                                 <span class="slds-tree__item-meta slds-truncate" title={metatext}>
                                     <span class="slds-assistive-text">:</span>{metatext}

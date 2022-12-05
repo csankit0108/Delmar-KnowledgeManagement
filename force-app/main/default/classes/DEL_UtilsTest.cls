@@ -10,6 +10,19 @@
 *******************************************************************************************************/
 @IsTest
 private class DEL_UtilsTest {
+
+    /**
+    * @ author       :  Rakesh Nayak
+    * @ description  :  Setting up test data for DEL_Utils method
+    **/
+    @TestSetup
+    static void createData(){
+        Account objAccount = new DEL_TestUtility.AccountBuilder()
+            .setName('Test Account')
+            .createAccount();
+        insert objAccount;
+    }
+
     /**
     * @ author       :  Ankit C
     * @ description  :  Test method for logException() method in DEL_Utils class
@@ -78,4 +91,34 @@ private class DEL_UtilsTest {
         System.assertEquals('<div>this is HtmlBody<br><div><i>Okay</i></div><br><b>Update please</b></div>', strLatestReply);
     }
 
+    /**
+    * @ author       :  Rakesh Nayak
+    * @ description  :  Test method for logDMLException() and processDMLErrors() method for Upsert in DEL_Utils class
+    **/
+    @Istest
+    private static void testLogDMLExceptionForUpsert() {
+        List<Account> list_Accounts = new List<Account>();
+        list_Accounts.add(new Account());
+        Account objAccount = [SELECT 
+                              Id,
+                              Name
+                              FROM 
+                              Account
+                              LIMIT 1];
+        
+        objAccount.Name ='';
+        list_Accounts.add(objAccount);
+        Test.startTest();
+        List<Database.UpsertResult> list_Results = Database.upsert(list_Accounts, false);
+        DEL_Utils.logDMLException('test_Class', 'test_Method', DEL_Utils.processDMLErrors(list_Results, 'Upsert'));
+        Test.stopTest();
+
+        List<DEL_ExceptionLog__c> list_ExceptionLogs = [SELECT
+                                                        Id, 
+                                                        MethodName__c
+                                                        FROM DEL_ExceptionLog__c
+                                                        WHERE MethodName__c = 'test_Method'];
+        
+        System.assert(!list_ExceptionLogs.isEmpty());
+    }
 }
