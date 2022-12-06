@@ -29,3 +29,9 @@ u:hover {
     font-weight: var(--strFontWeight,normal);
     color: var(--strFontColor,#0000FF);
 }
+
+.del-textWrap {
+    display: block;
+    white-space: normal;
+    margin: 0;
+}

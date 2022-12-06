@@ -62,7 +62,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>It stores the label for column name in tree</shortDescription>
-        <value>Category Name</value>
+        <value>Category</value>
     </labels>
     <labels>
         <fullName>CLDEL00027</fullName>
@@ -119,6 +119,14 @@
         <protected>false</protected>
         <shortDescription>It stores the Success Message for Successfully Saving of Selected Categories.</shortDescription>
         <value>Successfully Saved Categories for</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00034</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the column name for knowledge articles table in admin component</shortDescription>
+        <value>Article Title</value>
     </labels>
     <labels>
         <categories>lightning</categories>

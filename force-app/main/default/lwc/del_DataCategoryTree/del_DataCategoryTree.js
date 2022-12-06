@@ -15,6 +15,8 @@ import CLDEL00021 from "@salesforce/label/c.CLDEL00021";
 import CLDEL00022 from "@salesforce/label/c.CLDEL00022";
 //CLDEL00024 - "Save" (This is a label value for 'Save' button)
 import CLDEL00024 from "@salesforce/label/c.CLDEL00024";
+//CLDEL00026 - "Category Name" (It stores the label for column name in tree)
+import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
 //CLDEL00029 - "Table of Contents" (It stores the title for Selected Categories for the Customer Category Component)
 import CLDEL00029 from "@salesforce/label/c.CLDEL00029";
 //CLDEL00030 - "Selected Categories(It stores the title for Edit Categories Section for Customer Category Component)
@@ -25,6 +27,7 @@ import CLDEL00031 from "@salesforce/label/c.CLDEL00031";
 import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 //CLDEL00033 - "Successfully Saved Categories for" (It stores the Success Message for Successfully Saving of Selected Categories.)
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
+
 
 export default class Del_DataCategoryTree extends NavigationMixin(LightningElement) {
     @api strPageName;
@@ -74,7 +77,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
     @track gridColumns = [{
         type: 'text',
         fieldName: 'label',
-        label: 'Category Name'
+        label: CLDEL00026
     }];
     
     renderedCallback() {

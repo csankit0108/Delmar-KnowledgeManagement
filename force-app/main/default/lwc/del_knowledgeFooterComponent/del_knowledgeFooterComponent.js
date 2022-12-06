@@ -10,11 +10,8 @@ import CLDEL00028 from "@salesforce/label/c.CLDEL00028";
 export default class Del_knowledgeFooterComponent extends NavigationMixin(LightningElement) {
     @api recordId;
 
-    strNextButton= CLDEL00027;
-    strPreviousButton= CLDEL00028;
-
-    @track strLabelPreviousToDisplay = 'Previous';
-    @track strLabelNextToDisplay = 'Next';
+    @track strLabelPreviousToDisplay = CLDEL00028;
+    @track strLabelNextToDisplay = CLDEL00027;
     @track objNextPrevious;
     @track blnNext = false;
     @track blnPrevious = false;
@@ -37,8 +34,8 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
             if (!this.objNextPrevious.hasOwnProperty('previous')) {
                 this.blnPrevious = true;
             }
-            this.strLabelPreviousToDisplay = this.objNextPrevious.hasOwnProperty('previous') ? this.objNextPrevious.previous.Title : 'Previous';
-            this.strLabelNextToDisplay = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.Title : 'Next';
+            this.strLabelPreviousToDisplay = this.objNextPrevious.hasOwnProperty('previous') ? this.objNextPrevious.previous.Title : CLDEL00028;
+            this.strLabelNextToDisplay = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.Title : CLDEL00027;
             console.log(this.strLabelPreviousToDisplay+'=>'+this.strLabelNextToDisplay);
         })
         .catch(error => {

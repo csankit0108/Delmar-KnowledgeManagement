@@ -83,7 +83,7 @@
             <span class="slds-has-flexi-truncate">
                 <template if:true={isDisabled}>
                     <span
-                        class="slds-tree__item-label slds-truncate"
+                        class="slds-tree__item-label del-textWrap"
                         title={label}
                         >{label}</span
                     >
@@ -100,7 +100,7 @@
                 <template if:false={isDisabled}>
                     <template if:true={blnIsUrl}>
                         <a href={href} tabindex="-1" role="presentation">
-                            <span class="slds-tree__item-label slds-truncate del-treeItem" title={label}><u>{label}</u></span>
+                            <span class="slds-tree__item-label del-textWrap del-treeItem" title={label}><u>{label}</u></span>
                             <template if:true={metatext}>
                                 <span class="slds-tree__item-meta slds-truncate" title={metatext}>
                                     <span class="slds-assistive-text">:</span>{metatext}
@@ -110,7 +110,7 @@
                     </template>
                     <template if:false={blnIsUrl}>
                         <a href={href} tabindex="-1" role="presentation">
-                            <span class="slds-tree__item-label slds-truncate" title={label}>{label}</span>
+                            <span class="slds-tree__item-label del-textWrap" title={label}>{label}</span>
                             <template if:true={metatext}>
                                 <span class="slds-tree__item-meta slds-truncate" title={metatext}>
                                     <span class="slds-assistive-text">:</span>{metatext}

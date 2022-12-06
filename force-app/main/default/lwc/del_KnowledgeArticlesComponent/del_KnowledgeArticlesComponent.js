@@ -26,6 +26,8 @@ import CLDEL00024 from "@salesforce/label/c.CLDEL00024";
 import CLDEL00025 from "@salesforce/label/c.CLDEL00025";
 //CLDEL00026 - "Category Name" (It stores the label for column name in tree)
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
+//CLDEL00034 - "Article Title" (It stores the column name for knowledge articles table in admin component)
+import CLDEL00034 from "@salesforce/label/c.CLDEL00034";
 
 export default class Del_KnowledgeArticlesComponent extends NavigationMixin(LightningElement) {
     
@@ -35,6 +37,7 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     strCollapseAllButtonLabel = CLDEL00022;
     strResetButtonLabel = CLDEL00023;
     strSaveButtonLabel = CLDEL00024;
+    strKnowledgeArticleColumnName = CLDEL00034;
 
     blnCollapse = false;
     blnShowTreeGrid = false;
