@@ -103,7 +103,7 @@ public with sharing class DEL_KnowledgeManagementController {
         //List of  errors from all the DML operations
         List<String> list_ConsolidatedDMLErrors =new List<String>();
 
-        try{
+        try {
             for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : [SELECT 
                                                                             Id,
                                                                             Name,
@@ -121,7 +121,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 String strJson = JSON.serialize(strsubCategory);
                 CategoryWrapper objWrapper = (CategoryWrapper)JSON.deserialize(strjson, CategoryWrapper.class);
                 DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_KnowledgeConfiguration__c();
-                if(map_KnowledgeConfigurationsByName.containsKey(objWrapper.name)) {
+                if (map_KnowledgeConfigurationsByName.containsKey(objWrapper.name)) {
                     objKnowledgeConfiguration = map_KnowledgeConfigurationsByName.get(objWrapper.name);
                     objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
                     objKnowledgeConfiguration.PageName__c = strPageName;
@@ -137,7 +137,7 @@ public with sharing class DEL_KnowledgeManagementController {
             System.debug('List to be updated :: '+list_KnowledgeConfigurationsforUpdate);
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforInsert);
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforUpdate);
-            for(String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
+            for (String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
                 if(list_KnowledgeConfigurationsforUpdate.contains(map_KnowledgeConfigurationsByName.get(strCategory))) {
                     continue;
                 } else {
@@ -214,7 +214,7 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ return       :  'TableofContentsWrapper' - Wrapper Class
     **/
     @AuraEnabled(cacheable = true)
-    public static TableofContentsWrapper getCategorySelectionsByPage(String strPageName){
+    public static TableofContentsWrapper getCategorySelectionsByPage(String strPageName) {
         List<DescribeDataCategoryGroupResult> describeCategoryResult;
             List<DescribeDataCategoryGroupStructureResult> describeCategoryStructureResult;
         	List<DataCategory> list_ParentCategories = new List<DataCategory>();
@@ -271,7 +271,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 
                 //Looping throught the first describe result to create
                 //the list of list_DataCategoryGroupSobjectTypePairs for the second describe call
-                for(DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
+                for (DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
                     DataCategoryGroupSobjectTypePair objDataCategoryGroupSobjectTypePair = new DataCategoryGroupSobjectTypePair();
                     objDataCategoryGroupSobjectTypePair.setSobject(singleResult.getSobject());
                     objDataCategoryGroupSobjectTypePair.setDataCategoryGroupName(singleResult.getName());
@@ -281,7 +281,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 //describeDataCategoryGroupStructures()
                 describeCategoryStructureResult = Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
                 //Getting data from the result
-                for(DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
+                for (DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
                     //Get name of the associated Sobject
                     singleResult.getSobject();
                     
@@ -384,7 +384,7 @@ public with sharing class DEL_KnowledgeManagementController {
     **/
     @AuraEnabled(cacheable = true)
     public static KnowledgeWrapper 
-        getDescribeDataCategoryGroupStructureResults(){
+        getDescribeDataCategoryGroupStructureResults() {
             List<DescribeDataCategoryGroupResult> describeCategoryResult;
             List<DescribeDataCategoryGroupStructureResult> describeCategoryStructureResult;
             List<DataCategory> list_ParentCategories = new List<DataCategory>();
@@ -422,7 +422,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 
                 //Looping throught the first describe result to create
                 //the list of list_DataCategoryGroupSobjectTypePairs for the second describe call
-                for(DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
+                for (DescribeDataCategoryGroupResult singleResult : describeCategoryResult) {
                     DataCategoryGroupSobjectTypePair objDataCategoryGroupSobjectTypePair = new DataCategoryGroupSobjectTypePair();
                     objDataCategoryGroupSobjectTypePair.setSobject(singleResult.getSobject());
                     objDataCategoryGroupSobjectTypePair.setDataCategoryGroupName(singleResult.getName());
@@ -434,7 +434,7 @@ public with sharing class DEL_KnowledgeManagementController {
                     Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
                 system.debug('describeCategoryStructureResult :: '+describeCategoryStructureResult);
                 //Getting data from the result
-                for(DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
+                for (DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
                     //Get name of the associated Sobject
                     singleResult.getSobject();
                     

@@ -58,13 +58,13 @@ public class DEL_KnowledgeManagementControllerTest {
             .setUrlName('Know-about-delmar-details')
             .setSortOrder(1)
             .createKnowledgeKav();
-            list_NewKnowledgeArticles.add(objKnowledgekav1);
+        list_NewKnowledgeArticles.add(objKnowledgekav1);
         Knowledge__kav objKnowledgekav2 = new DEL_TestUtility.KnowledgeKavBuilder()
             .setTitle('Role Heirarchy Level')
             .setUrlName('Role-Heirarchy-Level')
             .setSortOrder(2)
             .createKnowledgeKav();
-            list_NewKnowledgeArticles.add(objKnowledgekav2);
+        list_NewKnowledgeArticles.add(objKnowledgekav2);
         Knowledge__kav objKnowledgekav3 = new DEL_TestUtility.KnowledgeKavBuilder()
             .setTitle('All Community Profiles')
             .setUrlName('All-Community-Profiles')
@@ -92,12 +92,13 @@ public class DEL_KnowledgeManagementControllerTest {
         Test.startTest();
         DEL_KnowledgeManagementController.KnowledgeWrapper objWrapper = DEL_KnowledgeManagementController.getDescribeDataCategoryGroupStructureResults();
         List<DEL_KnowledgeManagementController.CategoryWrapper> list_CategoryWrapper = new List<DEL_KnowledgeManagementController.CategoryWrapper>();
-        for (String strCategory : objWrapper.list_DefaultSortedCategories ){
+        for (String strCategory : objWrapper.list_DefaultSortedCategories ) {
             DEL_KnowledgeManagementController.CategoryWrapper objCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
             objCategoryWrapper.name = strCategory;
             objCategoryWrapper.SortOrder = '1';
             list_CategoryWrapper.add(objCategoryWrapper);
         }
+
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
         objNewCategoryWrapper.name = 'Bookings';
         objNewCategoryWrapper.SortOrder = '2';
@@ -121,6 +122,7 @@ public class DEL_KnowledgeManagementControllerTest {
                 list_CategoryWrapper.add(objCategoryWrapper);
             }
         }
+
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(objWrapper.map_CategoryByParent, list_CategoryWrapper, 'Admin_Setup');
         Test.stopTest();
