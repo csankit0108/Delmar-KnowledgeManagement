@@ -6,14 +6,20 @@ import DEL_Nxtprev from '@salesforce/apex/DEL_KnowledgeManagementController.DEL_
 import CLDEL00027 from "@salesforce/label/c.CLDEL00027";
 //CLDEL00028 - "Previous" (This is a label value for 'Previous' button)
 import CLDEL00028 from "@salesforce/label/c.CLDEL00028";
+
 export default class Del_knowledgeFooterComponent extends NavigationMixin(LightningElement) {
-    @track objNextPrevious;
-    @track blnNext = false;
-    @track blnPrevious = false;
     @api recordId;
 
     strNextButton= CLDEL00027;
     strPreviousButton= CLDEL00028;
+
+    @track strLabelPreviousToDisplay = 'Previous';
+    @track strLabelNextToDisplay = 'Next';
+    @track objNextPrevious;
+    @track blnNext = false;
+    @track blnPrevious = false;
+
+
     connectedCallback(){
     /**
      * @ author        : G Nanda Kishore Reddy 
@@ -31,26 +37,39 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
             if (!this.objNextPrevious.hasOwnProperty('previous')) {
                 this.blnPrevious = true;
             }
+            this.strLabelPreviousToDisplay = this.objNextPrevious.hasOwnProperty('previous') ? this.objNextPrevious.previous.Title : 'Previous';
+            this.strLabelNextToDisplay = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.Title : 'Next';
+            console.log(this.strLabelPreviousToDisplay+'=>'+this.strLabelNextToDisplay);
         })
         .catch(error => {
             console.log(JSON.stringify(error));
         })
     }
 
-/**
-* @ author        : G Nanda Kishore Reddy 
-* @ description   : This method is used to navigate knowledge articles based on 'Previous' and 'Next' button. 
-**/
- 
-    handleClick(evt){
-        let recordIdToNavigate;
-        if (evt.target.name == 'previous') {
-            recordIdToNavigate = this.objNextPrevious.hasOwnProperty('previous') ? this.objNextPrevious.previous.Id : null ;
-        }
-        if (evt.target.name == 'next') {
-            recordIdToNavigate = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.Id : null ;
-        }
-        console.log(recordIdToNavigate);
+    /**
+    * @ author        : G Nanda Kishore Reddy 
+    * @ description   : This method will handle 'Previous' button event.
+    **/
+    handlePreviousClick (evt) {
+        let recordIdToNavigate = this.objNextPrevious.hasOwnProperty('previous') ? this.objNextPrevious.previous.KnowledgeArticleId : null;
+        this.navigateToArticleRecord(recordIdToNavigate);
+    }
+
+    /**
+    * @ author        : G Nanda Kishore Reddy 
+    * @ description   : This method will handle 'Next' button event. 
+    **/
+    handleNextClick (evt) {
+        let recordIdToNavigate = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.KnowledgeArticleId : null;
+        this.navigateToArticleRecord(recordIdToNavigate);
+    }
+
+    /**
+    * @ author        : G Nanda Kishore Reddy 
+    * @ description   : This method is used to navigate knowledge articles based on 'Previous' and 'Next' button.
+    * @ params        : 'recordIdToNavigate' - Record Id to navigate to Article Record.
+    **/
+    navigateToArticleRecord (recordIdToNavigate) { 
         if (recordIdToNavigate) {
             this[NavigationMixin.Navigate]({
                 type: 'standard__recordPage',
@@ -60,6 +79,5 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
                 },
             });
         }
-
     }
 }

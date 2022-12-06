@@ -11,23 +11,30 @@
 *
 -->
 <template>
-    <article class="slds-card">
-        <div class="slds-grid slds-gutters">
-        
-                <lightning-layout>
-                    <lightning-layout-item padding="around-small" size="6">
-                        <lightning-button variant="neutral" style="padding-top: auto; padding-bottom: auto;" label={strPreviousButton}  onclick={handleClick} 
-                            disabled={blnPrevious} class="slds-m-left_x-small" name="previous">
-                        </lightning-button>
-                    </lightning-layout-item>
-                   <lightning-layout-item  padding="around-small" >
-                            <lightning-button variant="brand" label={strNextButton}  onclick={handleClick} 
-                                disabled={blnNext} class="slds-m-left_x-small" name="next">
-                            </lightning-button>
-                    </lightning-layout-item>   
-                </lightning-layout>
-           
-        </div>
-        
-    </article>
+    <lightning-card>
+        <lightning-layout multiple-rows="false">
+            <lightning-layout-item size="5" class="slds-p-around_x-small">
+                <button class="slds-button slds-button_neutral" title={strLabelPreviousToDisplay} variant="neutral" 
+                    onclick={handlePreviousClick} type="button" disabled={blnPrevious} style="width: 100%;">
+                    <div class="previous">
+                        <lightning-icon icon-name="utility:back" alternative-text="Previous Article" title={strLabelPreviousToDisplay} 
+                            class="slds-p-right_xxx-small" size="x-small">
+                        </lightning-icon>
+                        {strLabelPreviousToDisplay}
+                    </div>
+                </button>
+            </lightning-layout-item>
+            <lightning-layout-item size="5" class="slds-p-vertical_x-small">
+                <button class="slds-button slds-button_brand" variant="brand" title={strLabelNextToDisplay} onclick={handleNextClick}
+                    type="button" disabled={blnNext} style="width: 100%;">
+                    <div class="next">
+                        {strLabelNextToDisplay}
+                    </div>
+                    <lightning-icon icon-name="utility:forward" variant="inverse" alternative-text="Next Article" title={strLabelNextToDisplay} 
+                        class="slds-p-left_xxx-small" size="x-small">
+                    </lightning-icon>
+                </button>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
     </template>
