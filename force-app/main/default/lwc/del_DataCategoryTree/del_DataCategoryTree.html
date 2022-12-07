@@ -45,7 +45,7 @@
                     <lightning-layout-item size="12" small-device-size="12" medium-device-size="12" large-device-size="12"
                         padding="around-small" class="slds-p-vertical_none">
                         <lightning-card title={strTitleForCustomerComponent}>
-                            <template if:true={showExpandCollpaseButton}>
+                            <template if:true={blnShowExpandCollpaseButton}>
                                 <lightning-button-stateful name="tree" variant="neutral" label-when-off={strExpandButtonLabel} slot="actions"
                                     label-when-on={strCollapseButtonLabel} selected={blnSelectedExpandCollapseTree} onclick={handleClickExpandCollapse}>
                                 </lightning-button-stateful>

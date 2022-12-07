@@ -31,13 +31,14 @@ import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
 export default class Del_DataCategoryTree extends NavigationMixin(LightningElement) {
     @api strPageName;
-    @api showExpandCollpaseButton;
+    @api blnShowExpandCollpaseButton;
+    @api blnDefaultExpandCollapse;
     @api intTableHeight;
     @api strFontWeight;
     @api strFontStyle;
-    @api blnSetUnderline;
     @api strFontColor;
-
+    @api blnSetUnderline;
+    
     strExpandButtonLabel = CLDEL00021;
     strCollapseButtonLabel = CLDEL00022;
     strSavebuttonLabel = CLDEL00024;
@@ -60,6 +61,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
     blnSelectedExpandCollapseTree = true;
     blnSelectedExpandCollapseTreeGrid = false;
     wiredCategoryData;
+    blnIsPortalEnabled;
     map_NameToIndexMapping;
     map_ArticlesByCategoryName = [];
     map_CategoryByParent = [];
@@ -89,8 +91,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
         this.wiredCategoryData  = result;
         const {error, data} = result;
         if (data) {
-            console.log(result);
-
+            this.blnSelectedExpandCollapseTree = this.blnDefaultExpandCollapse;
             this.blnShowGrid = true;
             this.gridData = [];
             this.list_SelectedCategoryNames = [];
@@ -105,6 +106,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
             let objUserInformation = JSON.parse(JSON.stringify(data.objUserInformation));
+            this.blnIsPortalEnabled = data.objUserInformation.IsPortalEnabled;
             if (objUserInformation && !objUserInformation.IsPortalEnabled && 
                 objUserInformation.hasOwnProperty('UserPermissionsKnowledgeUser') &&
                 objUserInformation["UserPermissionsKnowledgeUser"]
@@ -125,7 +127,6 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             this.blnLoading = false;
         } else if (error) {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
-            console.log(JSON.stringify(error));
             this.blnLoading = false;
         }
     }
@@ -221,7 +222,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
         list_nestedTreeNodes.forEach(objCategory => { 
             if (objCategory.hasOwnProperty("Title")) {
                 objCategory["label"] = objCategory.Title;
-                objCategory["name"] = objCategory.Id;
+                objCategory["name"] = this.blnIsPortalEnabled ? objCategory.KnowledgeArticleId : objCategory.Id;
                 objCategory["expanded"] = false;
                 objCategory["type"] = 'url';
 
@@ -241,7 +242,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             } else {
                 objCategory["label"] = this.map_LabelNameByUniqueNameCategories[objCategory.Name];
                 objCategory["name"] = objCategory.Name;
-                objCategory["expanded"] = true;
+                objCategory["expanded"] = this.blnDefaultExpandCollapse;
 
                 if (objCategory.hasOwnProperty("Id")) {
                     delete objCategory["Id"];
@@ -482,7 +483,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
         Object.keys(this.map_ArticlesByCategoryName).forEach(objCategory => {
             list_Articles.push(...this.map_ArticlesByCategoryName[objCategory]);
         });
-        let list_ArticlesIds = list_Articles.map(objArticle => objArticle.Id);
+        let list_ArticlesIds = list_Articles.map(objArticle => objArticle.name);
         if (list_ArticlesIds.includes(event.detail.name)){
             this[NavigationMixin.GenerateUrl]({
                 type: "standard__recordPage",
@@ -549,9 +550,7 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
             this.showToastMessage(CLDEL00007, CLDEL00033+' '+this.strPageName, 'success');
             this.blnIsEditMode = false;
 
-            if (this.blnSelectedExpandCollapseTree) {
-                this.blnSelectedExpandCollapseTree = !this.blnSelectedExpandCollapseTree;
-            }
+            this.blnSelectedExpandCollapseTree = !this.blnSelectedExpandCollapseTree;
             if (this.blnSelectedExpandCollapseTreeGrid) {
                 this.blnSelectedExpandCollapseTreeGrid = !this.blnSelectedExpandCollapseTreeGrid;
             }
@@ -560,7 +559,6 @@ export default class Del_DataCategoryTree extends NavigationMixin(LightningEleme
         })
         .catch(error => {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
-            console.log(JSON.stringify(error));
         });
         
         this.blnSaveDisabled = true;

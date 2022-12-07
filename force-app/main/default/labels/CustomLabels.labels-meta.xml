@@ -86,7 +86,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>It stores the title for Customer Category Component.</shortDescription>
-        <value>Table of Contents</value>
+        <value>Categories</value>
     </labels>
     <labels>
         <fullName>CLDEL00030</fullName>
@@ -127,6 +127,14 @@
         <protected>false</protected>
         <shortDescription>It stores the column name for knowledge articles table in admin component</shortDescription>
         <value>Article Title</value>
+    </labels>
+    <labels>
+        <fullName>CLDEL00035</fullName>
+        <categories>DEL Knowledge Management</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>It stores the success message of saving Sort Order in Knowledge Admin Component</shortDescription>
+        <value>Saved All Categories and Articles</value>
     </labels>
     <labels>
         <categories>lightning</categories>

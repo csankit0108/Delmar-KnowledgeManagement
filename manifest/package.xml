@@ -45,6 +45,8 @@
         <members>CLDEL00031</members>
         <members>CLDEL00032</members>
         <members>CLDEL00033</members>
+        <members>CLDEL00034</members>
+        <members>CLDEL00035</members>
         <members>lightning_LightningTree_expandBranch</members>
         <members>lightning_LightningTree_collapseBranch</members>
         <name>CustomLabel</name>

@@ -28,6 +28,8 @@ import CLDEL00025 from "@salesforce/label/c.CLDEL00025";
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
 //CLDEL00034 - "Article Title" (It stores the column name for knowledge articles table in admin component)
 import CLDEL00034 from "@salesforce/label/c.CLDEL00034";
+//CLDEL00035 - "Saved All Categories and Articles" (It stores the success message of saving Categories and Knowledge Articles Sort Order)
+import CLDEL00035 from "@salesforce/label/c.CLDEL00035";
 
 export default class Del_KnowledgeArticlesComponent extends NavigationMixin(LightningElement) {
     
@@ -47,10 +49,11 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     blnSelectedExpandCollapseTree = true;
     blnSelectedExpandCollapseTreeGrid = false;
 
-    wiredCategoryData;
+    @track wiredCategoryData;
     dragStart;
     map_knowledgeArticlesByCategory;
     map_UniqueNameCategoriesByLabelName;
+    strUserLanguage;
 
     map_CategoryByParent = [];
     map_NameToIndexMapping = [];
@@ -116,13 +119,13 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
         this.wiredCategoryData  = result;
         const {error, data} = result;
         if (data) {
-            this.gridData =[];
+            this.gridData = [];
             this.list_SelectedCategories = [];
             this.list_KnowledgeArticles = null;
             this.strKnowledgeArticleTableTitle = null;
             this.blnSelectedExpandCollapseTree = true;
             this.blnSelectedExpandCollapseTreeGrid = false;
-            console.log(result);
+
             let list_AllCategories = JSON.parse(JSON.stringify(data.list_AllCategories));
             this.map_CategoryByParent = data.map_CategoryByParent;
             this.list_SelectedCategoryNames = data.list_DefaultSortedCategories;
@@ -136,6 +139,7 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             if (data.hasOwnProperty("objUserInformation")) {
                 this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
                 this.filterKnowledgeArticles(data.objUserInformation.LanguageLocaleKey);
+                this.strUserLanguage = data.objUserInformation.LanguageLocaleKey;
             }
 
             this.createTree(this.list_SelectedCategoryNames);
@@ -164,9 +168,10 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                 this.list_Categories.push({ label: objParentCategory, value: objParentCategory});
             }
 
+            this.blnIsLoading = false;
         } else if (error) {
             this.showToastMessage(CLDEL00001, error.body.message , 'error');
-            console.log(JSON.stringify(error));
+            this.blnIsLoading = false;
         }
     }
 
@@ -210,15 +215,14 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
             }
             Object.keys(map_ArticlesByKnowledgeArticleId).forEach(idKnowledgeArticleId => {
                 let list_Articles = map_ArticlesByKnowledgeArticleId[idKnowledgeArticleId];
-                // let filtered_Articles = [...list_Articles].filter(article => article.Language === strUserLanguageCode);
-                // if (filtered_Articles.length < 1) {
-                let filtered_Articles = [...list_Articles].filter(article => article.IsMasterLanguage === true);
-                // }
+                let filtered_Articles = [...list_Articles].filter(article => article.Language === strUserLanguageCode);
+                if (filtered_Articles.length < 1) {
+                    filtered_Articles = [...list_Articles].filter(article => article.IsMasterLanguage === true);
+                }
                 listKnowledgeArticlesTemp.push(...filtered_Articles);
             });
             this.map_knowledgeArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
         });
-        console.log(this.map_knowledgeArticlesByCategory);
     }
 
     /**
@@ -376,40 +380,34 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
              })
             .then(result => {
                 allRunSuccessfully["status"] = true;
-                allRunSuccessfully["message"] = "Saved All Categories and Articles";
+                allRunSuccessfully["message"] = CLDEL00035;
             })
             .catch(error => {
                 allRunSuccessfully["status"] = false;
                 allRunSuccessfully["message"] = error.body.message;
             })
             .finally(() => {
-                if (allRunSuccessfully["status"]) {
-                    resolve(allRunSuccessfully["message"]);
-                } else {
-                    reject(allRunSuccessfully["message"]);
+                //Calling this function to save Knowledge Articles order 
+                //Class&MethodName - DEL_KnowledgemanagementController.setknowledgeArticlesOrder()
+                if (this.list_KnowledgeArticles) {
+                    setknowledgeArticlesOrder({list_KnowledgeArticles : this.list_KnowledgeArticles})
+                    .then(result => {
+                        allRunSuccessfully["status"] = true;
+                        allRunSuccessfully["message"] = CLDEL00035;
+                    })
+                    .catch(error => {
+                        allRunSuccessfully["status"] = false;
+                        allRunSuccessfully["message"] = error.body.message;
+                    })
+                    .finally(() => {
+                        if (allRunSuccessfully["status"]) {
+                            resolve(allRunSuccessfully["message"]);
+                        } else {
+                            reject(allRunSuccessfully["message"]);
+                        }
+                    });
                 }
             });
-
-            //Calling this function to save Knowledge Articles order 
-            //Class&MethodName - DEL_KnowledgemanagementController.setknowledgeArticlesOrder()
-            if (this.list_KnowledgeArticles) {
-                setknowledgeArticlesOrder({list_KnowledgeArticles : this.list_KnowledgeArticles})
-                .then(result => {
-                    allRunSuccessfully["status"] = true;
-                    allRunSuccessfully["message"] = "Saved All Categories and Articles";
-                })
-                .catch(error => {
-                    allRunSuccessfully["status"] = false;
-                    allRunSuccessfully["message"] = error.body.message;
-                })
-                .finally(() => {
-                    if (allRunSuccessfully["status"]) {
-                        resolve(allRunSuccessfully["message"]);
-                    } else {
-                        reject(allRunSuccessfully["message"]);
-                    }
-                });
-            }
         });
 
         /**
@@ -419,18 +417,14 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
         **/
         promiseSaveArticlesAndCategories.then(message => {
             this.showToastMessage(CLDEL00007, message, 'success');
-            refreshApex(this.wiredCategoryData);
-            this.blnIsLoading = false;
         }).catch(message => {
             this.showToastMessage(CLDEL00001, message, 'error');
-            this.blnIsLoading = false;
         }).finally(() => {
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
-            this.strKnowledgeArticleTableTitle = null;
-            this.list_KnowledgeArticles = null;
+            refreshApex(this.wiredCategoryData);
         });
-
+        
     }
 
     /**
@@ -562,7 +556,6 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                      'blnExpandCollapse' - Boolean value of Expand/Collapse button.  
     **/
     changeExpandCollapse (treeData, blnExpandCollapse) {
-        console.log(treeData);
         treeData.forEach(objTreeNode => {
             if (!objTreeNode.hasOwnProperty("Title")) {
                 objTreeNode.expanded = blnExpandCollapse;
@@ -578,11 +571,17 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method will navigate to Knowledge Article upon click.
     **/
     handleNavigateKnowledgeArticle (event) {
-        if (event.target.dataset.id) {
+        let idToNavigateArticle = event.target.dataset.id;
+        let filteredArticle = [...this.list_KnowledgeArticles].filter(objArticle => (objArticle.KnowledgeArticleId == event.target.dataset.id) && (objArticle.Language != this.strUserLanguage));
+        if (filteredArticle.length == 1) {
+            idToNavigateArticle = filteredArticle[0]["Id"];
+        }
+        
+        if (idToNavigateArticle) {
             this[NavigationMixin.GenerateUrl]({
                 type: 'standard__recordPage',
                 attributes: {
-                    recordId: event.target.dataset.id,
+                    recordId: idToNavigateArticle,
                     actionName: 'view'
                 },
             }).then(url => {
@@ -660,7 +659,6 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
         };
         this.list_KnowledgeArticles.move(DraggedIndex, DroppedIndex);
         this.setSortOrderForKnowledgeArticles();
-        console.log(this.list_KnowledgeArticles);
         this.clearStyling();
     }
 
