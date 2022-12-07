@@ -406,6 +406,12 @@ export default class Del_KnowledgeArticlesComponent extends NavigationMixin(Ligh
                             reject(allRunSuccessfully["message"]);
                         }
                     });
+                } else {
+                    if (allRunSuccessfully["status"]) {
+                        resolve(allRunSuccessfully["message"]);
+                    } else {
+                        reject(allRunSuccessfully["message"]);
+                    }
                 }
             });
         });
