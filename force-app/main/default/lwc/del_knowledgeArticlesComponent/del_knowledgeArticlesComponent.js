@@ -31,7 +31,7 @@ import CLDEL00034 from "@salesforce/label/c.CLDEL00034";
 //CLDEL00035 - "Saved All Categories and Articles" (It stores the success message of saving Categories and Knowledge Articles Sort Order)
 import CLDEL00035 from "@salesforce/label/c.CLDEL00035";
 
-export default class Del_KnowledgeArticlesComponent extends NavigationMixin(LightningElement) {
+export default class Del_knowledgeArticlesComponent extends NavigationMixin(LightningElement) {
     
     strAvailableCategoriesTreeTitle = CLDEL00019;
     strSelectedCategoriesTreeTitle = CLDEL00020;
