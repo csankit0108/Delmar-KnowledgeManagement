@@ -13,27 +13,31 @@
 <template>
     <lightning-card>
         <lightning-layout multiple-rows="false">
-            <lightning-layout-item size="5" class="slds-p-around_x-small">
-                <button class="slds-button slds-button_neutral" title={strLabelPreviousToDisplay} variant="neutral" 
-                    onclick={handlePreviousClick} type="button" disabled={blnPrevious} style="width: 100%;">
-                    <div class="previous">
-                        <lightning-icon icon-name="utility:back" alternative-text="Previous Article" title={strLabelPreviousToDisplay} 
-                            class="slds-p-right_xx-small" size="x-small">
-                        </lightning-icon>
-                        {strLabelPreviousToDisplay}
+            <lightning-layout-item size="12" class="slds-p-around_none">
+                <div class="delFooterArea" style="width:100%; display: flex; justify-content: left;">
+                    <div style="width: 40%; display: inline-block;" class="slds-var-m-horizontal_small">
+                        <button class="slds-button slds-button_neutral" title={strLabelPreviousToDisplay} variant="neutral" 
+                            onclick={handlePreviousClick} type="button" disabled={blnPrevious} style="width: 100%;">
+                            <lightning-icon icon-name="utility:back" alternative-text="Previous Article" title={strLabelPreviousToDisplay} 
+                                class="slds-p-right_xx-small" size="x-small">
+                            </lightning-icon>
+                            <div class="del-previous">
+                                {strLabelPreviousToDisplay}
+                            </div>
+                        </button>
                     </div>
-                </button>
-            </lightning-layout-item>
-            <lightning-layout-item size="5" class="slds-p-vertical_x-small">
-                <button class="slds-button slds-button_brand" variant="brand" title={strLabelNextToDisplay} onclick={handleNextClick}
-                    type="button" disabled={blnNext} style="width: 100%;">
-                    <div class="next">
-                        {strLabelNextToDisplay}
+                    <div style="width: 40%;display: inline-block;" class="slds-var-m-horizontal_small">
+                        <button class="slds-button slds-button_brand" variant="brand" title={strLabelNextToDisplay} onclick={handleNextClick}
+                            type="button" disabled={blnNext} style="width: 100%;">
+                            <div class="del-next">
+                                {strLabelNextToDisplay}
+                            </div>
+                            <lightning-icon icon-name="utility:forward" variant="inverse" alternative-text="Next Article" title={strLabelNextToDisplay} 
+                                class="slds-p-left_xx-small" size="x-small">
+                            </lightning-icon>
+                        </button>
                     </div>
-                    <lightning-icon icon-name="utility:forward" variant="inverse" alternative-text="Next Article" title={strLabelNextToDisplay} 
-                        class="slds-p-left_xx-small" size="x-small">
-                    </lightning-icon>
-                </button>
+                </div>
             </lightning-layout-item>
         </lightning-layout>
     </lightning-card>

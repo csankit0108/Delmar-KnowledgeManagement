@@ -1,5 +1,6 @@
 import { LightningElement,api,track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import DEL_Nxtprev from '@salesforce/apex/DEL_KnowledgeManagementController.DEL_Nxtprev';
 import getCurrentUserDetails from '@salesforce/apex/DEL_KnowledgeManagementController.getCurrentUserDetails';
 import idUserId from '@salesforce/user/Id';
@@ -13,6 +14,7 @@ import CLDEL00028 from "@salesforce/label/c.CLDEL00028";
 
 export default class Del_knowledgeFooterComponent extends NavigationMixin(LightningElement) {
     @api recordId;
+    @api strAlignment;
 
     isUserPortalEnabled;
     @track strLabelPreviousToDisplay = CLDEL00028;
@@ -21,6 +23,26 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
     @track blnNext = false;
     @track blnPrevious = false;
 
+    renderedCallback () {
+        if (this.strAlignment) {
+            let footerHTMLElement = this.template.querySelector(".delFooterArea");
+            switch(this.strAlignment) {
+                case 'left':
+                    footerHTMLElement.style.justifyContent = "left";
+                    break;
+                case 'right':
+                    footerHTMLElement.style.justifyContent = "right";
+                    break;
+                case 'center':
+                    footerHTMLElement.style.justifyContent = "center";
+                    break;
+                case 'spread':
+                    footerHTMLElement.style.justifyContent = "space-between";
+                    break;
+                default: break;
+            }
+        }
+    }
 
     connectedCallback () {
         /**

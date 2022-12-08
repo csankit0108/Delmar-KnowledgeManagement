@@ -1,4 +1,8 @@
-.previous{
+:host {
+  --slds-c-card-header-spacing-block-start : 0;
+}
+
+.del-previous{
   width: fit-content;
   white-space: nowrap;
   overflow: hidden;
@@ -6,7 +10,7 @@
   margin: 0;    
 }
 
-.next{
+.del-next{
   width: fit-content;
   white-space: nowrap;
   overflow: hidden;
