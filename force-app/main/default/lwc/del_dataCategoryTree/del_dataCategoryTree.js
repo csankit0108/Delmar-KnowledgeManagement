@@ -29,7 +29,7 @@ import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
 
-export default class Del_DataCategoryTree extends NavigationMixin(LightningElement) {
+export default class Del_dataCategoryTree extends NavigationMixin(LightningElement) {
     @api strPageName;
     @api blnShowExpandCollpaseButton;
     @api blnDefaultExpandCollapse;
