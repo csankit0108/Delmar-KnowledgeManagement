@@ -3,6 +3,7 @@
 * @ Name            :   DEL_KnowledgeManagementController
 * @ Purpose         :   Controller class for del_KnowledgeArticlesComponent
 * @ Author          :   Rakesh Nayak
+* @ TestClass       :   DEL_KnowledgeManagementControllerTest
 *
 *   Date            |  Developer Name               |  Version      |  Changes
 * ==============================================================================================================================

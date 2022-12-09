@@ -20,14 +20,14 @@ public class DEL_KnowledgeManagementControllerTest {
     @TestSetup
     static void createData(){
         DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_TestUtility.KnowledgeConfigurationBuilder()
-            .setCategoryName('Systems')
+            .setCategoryName('DCMS')
             .setSortOrder(1)
             .setPageName('Admin_Setup')
             .createKnowledgeConfiguration();
         insert objKnowledgeConfiguration;
 
         DEL_KnowledgeConfiguration__c objKnowledgeConfiguration2 = new DEL_TestUtility.KnowledgeConfigurationBuilder()
-            .setCategoryName('DCMS')
+            .setCategoryName('Client')
             .setSortOrder(1)
             .setPageName('Admin_Setup')
             .setParentCategory(objKnowledgeConfiguration.Id)
@@ -35,7 +35,7 @@ public class DEL_KnowledgeManagementControllerTest {
         insert objKnowledgeConfiguration2;
 
         DEL_KnowledgeConfiguration__c objKnowledgeConfiguration3 = new DEL_TestUtility.KnowledgeConfigurationBuilder()
-            .setCategoryName('Client')
+            .setCategoryName('Getting_Started')
             .setSortOrder(1)
             .setPageName('Admin_Setup')
             .setParentCategory(objKnowledgeConfiguration2.Id)
@@ -43,7 +43,7 @@ public class DEL_KnowledgeManagementControllerTest {
         insert objKnowledgeConfiguration3;
 
         DEL_KnowledgeConfiguration__c objKnowledgeConfiguration4 = new DEL_TestUtility.KnowledgeConfigurationBuilder()
-            .setCategoryName('Client_About_DCMS')
+            .setCategoryName('About_DCMS')
             .setSortOrder(1)
             .setPageName('Admin_Setup')
             .setParentCategory(objKnowledgeConfiguration3.Id)
@@ -77,8 +77,8 @@ public class DEL_KnowledgeManagementControllerTest {
         for (Knowledge__kav objKnowledgeArticle: [SELECT KnowledgeArticleId FROM Knowledge__kav]) {
 			Knowledge__DataCategorySelection objKnowledgeDataCategorySelection= new DEL_TestUtility.KnowledgeCategorySelectionBuilder()
                 .setParentId(objKnowledgeArticle.Id)
-                .setDataCategoryGroupName('Delmar')
-                .setDataCategoryName('Client_Bookings')
+                .setDataCategoryGroupName('Systems')
+                .setDataCategoryName('About_DCMS')
                 .createKnowledgeDataCategorySelection();
                 list_KnowledgeDataCategorySelection.add(objKnowledgeDataCategorySelection);
 
@@ -113,7 +113,7 @@ public class DEL_KnowledgeManagementControllerTest {
         DEL_KnowledgeManagementController.KnowledgeWrapper objWrapper = DEL_KnowledgeManagementController.getDescribeDataCategoryGroupStructureResults();
         List<DEL_KnowledgeManagementController.CategoryWrapper> list_CategoryWrapper = new List<DEL_KnowledgeManagementController.CategoryWrapper>();
         for (String strCategory : objWrapper.list_DefaultSortedCategories ) {
-            if (strCategory == 'Client') {
+            if (strCategory == 'Getting_Started') {
                 continue;
             } else {
                 DEL_KnowledgeManagementController.CategoryWrapper objCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
@@ -146,7 +146,7 @@ public class DEL_KnowledgeManagementControllerTest {
         Map<String, Knowledge__kav> map_NextPreviousKnowledgeArticle = DEL_KnowledgeManagementController.DEL_Nxtprev(objKnowledgekav.Id);
         Set<String> list_String = map_NextPreviousKnowledgeArticle.keySet();
         Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
-        List<Knowledge__kav> list_KnowledgeArticles = map_AllKnowledgeArticlesByCategory.get('Client_Bookings');
+        List<Knowledge__kav> list_KnowledgeArticles = map_AllKnowledgeArticlesByCategory.get('About_DCMS');
         DEL_KnowledgeManagementController.setknowledgeArticlesOrder(list_KnowledgeArticles);
         Test.stopTest();
         

@@ -2,7 +2,8 @@
 
 -- PRE-DEPLOYMENT STEPS --
 
-1. Take backup.
+1. Make sure the deployment user is assigned Knowledge User permission.
+2. Got to Setup > Digital Experiences > Settings and select Allow using standard external profiles for self-registration, user creation, and login.
 
 -- DEPLOYMENT --
 
@@ -20,4 +21,8 @@
 
 
 -- POST-DEPLOYMENT STEPS --
+1. Add the "Knowledge Management" page to the "Delmar-Service Console" app.
+2. Add the "Knowledge Footer Component" to the Knowledge Article record page.
+3. Add the "Instance Category Tree Component" component to site page.
+4. Add the "Knowledge Footer Component" to the Article Detail page in site.
 
