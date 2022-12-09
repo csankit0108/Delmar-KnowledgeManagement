@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>55.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Instance Category Tree Component</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+
+    <targetConfigs>  
+        <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage,lightningCommunity__Default">
+            <property name="blnShowExpandCollpaseButton" type="Boolean" default="true" label="Show Expand/Collapse Button"/>
+            <property name="blnDefaultExpandCollapse" type="Boolean" default="true" label="Show Expanded By Default"/>
+            <property name="strPageName" type="String" label="Instance Name" required="true" />
+            <property name="intTableHeight" type="Integer" label="Height of Component (in rem)" description="Provide height values in rem unit" default="30"/>
+            <property name="strFontColor" type="String" label="Knowledge Articles Font Color" description="Provide color values in hex format" placeholder="Enter color value in HEX format" default="#0000ff"/>
+            <property name="strFontWeight" type="String" datasource="normal,bold,bolder,thinner" label="Font Weight" default="normal"/>
+            <property name="strFontStyle" type="String" datasource="normal,italic" label="Font Style" default="normal"/>
+            <property name="blnSetUnderline" type="Boolean" label="Add underline to article names" default="true"/>
+        </targetConfig>
+    </targetConfigs>
+
+
+    
+</LightningComponentBundle>

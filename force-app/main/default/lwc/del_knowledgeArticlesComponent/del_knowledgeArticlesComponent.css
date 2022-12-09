@@ -1,0 +1,55 @@
+:host {
+    --slds-c-card-header-spacing-block-start : 0.25rem;
+    --slds-c-card-header-spacing-inline-end : 0;
+    --slds-c-card-header-spacing-inline-start: 0;
+    --slds-c-button-stateful-color-border-selected : rgb(201, 201, 201);
+}
+
+.del-card{
+    --slds-c-card-header-spacing-inline-start: 0.75rem;
+}
+
+.dragStartClass {
+    opacity: 0.7;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+.over {
+    padding-top: 20px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+.del-table-scrollable {
+    overflow-y: auto;
+    max-height: 15rem;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+}
+td {
+    cursor: grab;
+}
+
+th {
+    background: #eee;
+}

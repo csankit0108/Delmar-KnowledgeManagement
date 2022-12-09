@@ -1,0 +1,11 @@
+:host {
+    --slds-c-card-header-spacing-block-start : 0.25rem;
+    --slds-c-card-header-spacing-inline-end : 0;
+    --slds-c-card-header-spacing-inline-start: 0;
+    --slds-c-button-stateful-color-border-selected : rgb(201, 201, 201);
+}
+
+.del-tree-box {
+    max-height: fit-content;
+    padding:0;
+}

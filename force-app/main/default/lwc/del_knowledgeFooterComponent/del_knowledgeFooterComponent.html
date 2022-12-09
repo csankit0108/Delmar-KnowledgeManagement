@@ -1,0 +1,44 @@
+<!--
+* 
+* @ Name            :   del_KnowledgeFooterComponent
+* @ Purpose         :   This is a component for having 'Next' and 'Previous' buttons in the Knowledge Page for navigating to Next and 
+                        Previous knowledge articles.
+* @ Author          :   G Nanda Kishore Reddy
+*
+*   Date            |  Developer Name                 |  Version      |  Changes
+* =================================================================================================================
+*   26-10-2022      |  nandakishore.reddy@absyz.com   |  1.0          |  Initial Version
+*
+-->
+<template>
+    <lightning-card>
+        <lightning-layout multiple-rows="false">
+            <lightning-layout-item size="12" class="slds-p-around_none">
+                <div class="delFooterArea" style="width:100%; display: flex; justify-content: left;">
+                    <div style="width: 40%; display: inline-block;" class="slds-var-m-horizontal_small">
+                        <button class="slds-button slds-button_neutral" title={strLabelPreviousToDisplay} variant="neutral" 
+                            onclick={handlePreviousClick} type="button" disabled={blnPrevious} style="width: 100%;">
+                            <lightning-icon icon-name="utility:back" alternative-text="Previous Article" title={strLabelPreviousToDisplay} 
+                                class="slds-p-right_xx-small" size="x-small">
+                            </lightning-icon>
+                            <div class="del-previous">
+                                {strLabelPreviousToDisplay}
+                            </div>
+                        </button>
+                    </div>
+                    <div style="width: 40%;display: inline-block;" class="slds-var-m-horizontal_small">
+                        <button class="slds-button slds-button_brand" variant="brand" title={strLabelNextToDisplay} onclick={handleNextClick}
+                            type="button" disabled={blnNext} style="width: 100%;">
+                            <div class="del-next">
+                                {strLabelNextToDisplay}
+                            </div>
+                            <lightning-icon icon-name="utility:forward" variant="inverse" alternative-text="Next Article" title={strLabelNextToDisplay} 
+                                class="slds-p-left_xx-small" size="x-small">
+                            </lightning-icon>
+                        </button>
+                    </div>
+                </div>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+    </template>
