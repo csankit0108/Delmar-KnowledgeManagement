@@ -133,8 +133,7 @@ public with sharing class DEL_KnowledgeManagementController {
                     list_KnowledgeConfigurationsforInsert.add(objKnowledgeConfiguration);
                 }
             }
-            System.debug('List to be inserted :: '+list_KnowledgeConfigurationsforInsert);
-            System.debug('List to be updated :: '+list_KnowledgeConfigurationsforUpdate);
+
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforInsert);
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforUpdate);
             for (String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
@@ -432,7 +431,6 @@ public with sharing class DEL_KnowledgeManagementController {
                 //describeDataCategoryGroupStructures()
                 describeCategoryStructureResult = 
                     Schema.describeDataCategoryGroupStructures(list_DataCategoryGroupSobjectTypePairs, false);
-                system.debug('describeCategoryStructureResult :: '+describeCategoryStructureResult);
                 //Getting data from the result
                 for (DescribeDataCategoryGroupStructureResult singleResult : describeCategoryStructureResult) {
                     //Get name of the associated Sobject

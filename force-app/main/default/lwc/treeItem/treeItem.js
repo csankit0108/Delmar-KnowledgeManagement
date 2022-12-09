@@ -157,7 +157,6 @@ export default class cTreeItem extends LightningElement {
     
 
     handleClick(event) {
-        console.log('inside tree item onclick')
         if (!this.isDisabled) {
             // eslint-disable-next-line no-script-url
             if (this.href === 'javascript:void(0)') {
@@ -230,18 +229,6 @@ export default class cTreeItem extends LightningElement {
             this.preventDefaultAndStopPropagation();
             return;
         }
-        /*const customEvent = new CustomEvent('privateitemdragenter', {
-                bubbles: true,
-                composed: true,
-                cancelable: true,
-                detail: {
-                    name: this.nodename,
-                    key: this.nodeKey,
-                    target
-                }
-            });
-
-            this.dispatchEvent(customEvent);*/
     }
 
     handleDragLeave(event) {
@@ -250,19 +237,7 @@ export default class cTreeItem extends LightningElement {
             this.preventDefaultAndStopPropagation();
             return;
         }
-        /*const customEvent = new CustomEvent('privateitemdragleave', {
-                bubbles: true,
-                composed: true,
-                cancelable: true,
-                detail: {
-                    name: this.nodename,
-                    key: this.nodeKey,
-                    target
-                }
-            });
 
-            this.dispatchEvent(customEvent);*/
-            console.log(this.nodeKey);
     }
 
     handleDragOver(event) {
@@ -271,18 +246,6 @@ export default class cTreeItem extends LightningElement {
             this.preventDefaultAndStopPropagation();
             return;
         }
-        /*const customEvent = new CustomEvent('privateitemdragover', {
-                bubbles: true,
-                composed: true,
-                cancelable: true,
-                detail: {
-                    name: this.nodename,
-                    key: this.nodeKey,
-                    target
-                }
-            });
-
-            this.dispatchEvent(customEvent);*/
     }
 
     handleKeydown(event) {

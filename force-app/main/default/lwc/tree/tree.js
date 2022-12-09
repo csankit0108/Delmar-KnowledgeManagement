@@ -96,35 +96,20 @@ export default class cTree extends LightningElement {
 
 
     handleDragStart(event) {
-        console.log('inside handleDragStart in Tree Comp');
         const key = event.detail.key;
         const target = event.detail.target;
         const item = this.treedata.getItem(key);
-        // console.log('item::'+JSON.stringify(item));
-        // console.log('key::'+key);
-        // console.log('target::'+ target);
-        // console.log('name:: '+event.detail.name);
         this.strDragStartKey = key;
         this.strDragStartName = event.detail.name;
         this.objDragStartItem = item;
     }
 
     handleOnDrop(event) {
-        console.log('inside handleOnDrop in Tree Comp');
         const key = event.detail.key;
         const target = event.detail.target;
         const item = this.treedata.getItem(key);
-        // console.log('key::'+key);
-        // console.log('target::'+ target);
-        // console.log('name:: '+event.detail.name);
-        // console.log('item::'+JSON.stringify(item));
         this.strOnDropKey = key;
         this.strOnDropName = event.detail.name;
-        // let tempjson = '[{"label":"Versapay","name":"a0E2v00001wDGMKEA4","expanded":false,"items":[]},{"items":[{"items":[{"items":[{"label":"About DCMS","name":"a0E2v00001wDGMNEA4","expanded":false,"items":[]},{"label":"Bookings","name":"a0E2v00001wDGMOEA4","expanded":false,"items":[]}],"label":"Client","name":"a0E2v00001wDGMMEA4","expanded":false}],"label":"DCMS","name":"a0E2v00001wDGMLEA4","expanded":false}],"label":"Systems","name":"a0E2v00001wDGMJEA4","expanded":false},{"label":"Test New Category","name":"testId","expanded":false,"items":[]}]';
-        // this.items = JSON.parse(tempjson);
-        // this.normalizeData(this.items);
-        // console.log('items in parent tree::'+JSON.stringify(this.items));
-        // console.log('_items in parent tree::'+JSON.stringify(this._items));
         
         if (this.strOnDropName == this.strDragStartName ||  
             this.objDragStartItem["parent"] != item["parent"]
@@ -135,11 +120,8 @@ export default class cTree extends LightningElement {
 
         
         this.UpdatedCategoriesListByParentName(this.items, this.strDragStartName, this.strOnDropName, null);
-        // console.log('newSorted'+JSON.stringify(this.UpdatedCategoriesList));
-        // console.log('ParentName'+JSON.stringify(this.ToUpdateCategoryParent));
         this.list_ItemsTemp = this.items;
         this.sortTree(this.list_ItemsTemp);
-        //console.log(JSON.stringify(this.list_ItemsTemp));
         this.items = this.list_ItemsTemp;
 
         const customEvent = new CustomEvent('privateupdatedtree', {
@@ -175,7 +157,6 @@ export default class cTree extends LightningElement {
         if (categoryNameList.includes(categoryNameDragged) && categoryNameList.includes(categoryNameDropped)) {
             let categoryIndexDragged = items.findIndex(category => category.name === categoryNameDragged);
             let categoryIndexDropped = items.findIndex(category => category.name === categoryNameDropped);
-            //console.log(categoryIndexDragged+'=>'+categoryIndexDropped);
             Array.prototype.move = function (from, to) {
                 this.splice(to, 0, this.splice(from, 1)[0]);
             };
@@ -235,8 +216,6 @@ export default class cTree extends LightningElement {
 
     @api
     normalizeData(items) {
-        console.log('inside normalizeData');
-        console.log('items in normalizeData:: ' + this.items);
         if (items) {
             this.treedata = new TreeData();
 
@@ -312,13 +291,9 @@ export default class cTree extends LightningElement {
 
 
     handleClick(event) {
-        console.log('inside handle click in parent');
         const key = event.detail.key;
         const target = event.detail.target;
         const item = this.treedata.getItem(key);
-        console.log('key::'+key);
-        console.log('target::'+ target);
-        console.log('item::'+JSON.stringify(item));
         if (item) {
             if (target === 'chevron') {
                 if (item.treeNode.nodeRef.expanded) {
@@ -332,7 +307,6 @@ export default class cTree extends LightningElement {
                 this.setFocusToItem(item);
             }
         }
-        console.log(JSON.stringify(this._selectedItem));
     }
 
     expandBranch(node) {
