@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>DEL - This is a lightning page for Admin component</description>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>del_KnowledgeArticlesComponent</componentName>
+                <identifier>c_del_KnowledgeArticlesComponent</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>main</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>Knowledge management</masterLabel>
+    <template>
+        <name>flexipage:defaultAppHomeTemplate</name>
+    </template>
+    <type>AppPage</type>
+</FlexiPage>

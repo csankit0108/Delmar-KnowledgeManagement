@@ -1,0 +1,19 @@
+:host {
+  --slds-c-card-header-spacing-block-start : 0;
+}
+
+.del-previous{
+  width: fit-content;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;    
+}
+
+.del-next{
+  width: fit-content;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;    
+}
