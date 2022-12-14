@@ -77,7 +77,7 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
             this.strLabelNextToDisplay = this.objNextPrevious.hasOwnProperty('next') ? this.objNextPrevious.next.Title : CLDEL00027;
         })
         .catch(error => {
-            this.showToastMessage(CLDEL00001, error.body.message, 'error');
+            //this.showToastMessage(CLDEL00001, error.body.message, 'error');
         })
     }
 

@@ -178,9 +178,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                 
                 if (this.list_GroupCategoryNames.includes(this.map_CategoryByParent[objKnowledgeConfiguration.Name])) {
                     if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                            root.items = [...(root["items"] || []), objArticle];
-                        }
+                        root.items = [...(this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name] || []), ...(root["items"] || [])];
                     }
                     this.items.push(root);
                 } else {
@@ -190,9 +188,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                     }
                     let child = list_KnowledgeConfigsRecords[nameMappingConfigs[objKnowledgeConfiguration.Name]];
                     if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                            child.items = [...(child["items"] || []), objArticle];
-                        }
+                        child.items = [...(this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name] || []), ...(child["items"] || [])];
                     }
                 }
             } else {
