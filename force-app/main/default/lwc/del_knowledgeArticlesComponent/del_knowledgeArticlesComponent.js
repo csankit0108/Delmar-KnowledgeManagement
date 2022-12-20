@@ -354,7 +354,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method will call the list of knowledge Articles if the Category is selected
     **/
     handleCategorySelect(event) {
-        try{
         this.list_KnowledgeArticles = [];
         this.selectedTreeNode = event.detail.name;
         if (this.map_knowledgeArticlesByCategory.hasOwnProperty(this.selectedTreeNode)) {
@@ -366,9 +365,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.strKnowledgeArticleTableTitle = null;
             this.selectedTreeNode = null;
         }
-    }catch(e) {
-        console.log(e)
-    }
     }
 
     /**
