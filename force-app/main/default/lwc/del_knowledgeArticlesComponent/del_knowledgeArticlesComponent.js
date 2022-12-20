@@ -53,6 +53,8 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     map_knowledgeArticlesByCategory;
     map_UniqueNameCategoriesByLabelName;
     strUserLanguage;
+    //Backup for articles map
+    map_KnowledgeArticlesByCategoryMaster;
 
     list_ArticlesToSave = [];
     list_FinalSortedCategories = [];
@@ -135,11 +137,15 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.map_UniqueNameCategoriesByLabelName = data.map_CategoriesByUniqueName;
             this.map_ChildCategoriesByParent = JSON.parse(JSON.stringify(data.map_ChildCategoriesByParent));
             this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
+            this.map_KnowledgeArticlesByCategoryMaster = JSON.parse(JSON.stringify(this.map_knowledgeArticlesByCategory));
             this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
             if (data.hasOwnProperty("objUserInformation")) {
                 this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
-                this.filterKnowledgeArticles(data.objUserInformation.LanguageLocaleKey);
+                this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
+                    data.objUserInformation.LanguageLocaleKey, 
+                    this.map_knowledgeArticlesByCategory
+                );
                 this.strUserLanguage = data.objUserInformation.LanguageLocaleKey;
             }
 
@@ -199,10 +205,11 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
      * @ author      : Vinay kant
      * @ description : This method will filter knowledge article records based on logged-in user preference language.
      * @ params      : 'strUserLanguageCode' - Current logged-in user preference language code.
+     *                 'map_ArticlesByCategory' - Map of Knowledge articles by category name.
     **/
-    filterKnowledgeArticles (strUserLanguageCode) {
-        Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
-            let listKnowledgeArticlesCategory = this.map_knowledgeArticlesByCategory[eachCategory];
+    filterKnowledgeArticles(strUserLanguageCode, map_ArticlesByCategory) {
+        Object.keys(map_ArticlesByCategory).forEach(eachCategory => {
+            let listKnowledgeArticlesCategory = map_ArticlesByCategory[eachCategory];
             let listKnowledgeArticlesTemp = [];
             let map_ArticlesByKnowledgeArticleId = {};
             for (let article of listKnowledgeArticlesCategory) {
@@ -224,8 +231,10 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
                 }
                 listKnowledgeArticlesTemp.push(...filtered_Articles);
             });
-            this.map_knowledgeArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
+            map_ArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
         });
+
+        return map_ArticlesByCategory;
     }
 
     /**
@@ -345,6 +354,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method will call the list of knowledge Articles if the Category is selected
     **/
     handleCategorySelect(event) {
+        try{
         this.list_KnowledgeArticles = [];
         this.selectedTreeNode = event.detail.name;
         if (this.map_knowledgeArticlesByCategory.hasOwnProperty(this.selectedTreeNode)) {
@@ -356,6 +366,9 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.strKnowledgeArticleTableTitle = null;
             this.selectedTreeNode = null;
         }
+    }catch(e) {
+        console.log(e)
+    }
     }
 
     /**
@@ -470,7 +483,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method is used to get all the child categories for the selected categories.
     *                
     **/
-    fetchChildCategories (list_Categories, list_AllChildCategories) {
+    fetchChildCategories(list_Categories, list_AllChildCategories) {
         let strCategory = list_Categories[0];
         if(this.map_ChildCategoriesByParent[strCategory]) {
             for (let strChildCategory of this.map_ChildCategoriesByParent[strCategory]) {
@@ -590,6 +603,13 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.list_SelectedCategoryNames = this.list_selectedConfigurationNames;
         this.list_SelectedCategoryNamesBackup = this.list_selectedConfigurationNames;
         this.createTree(this.list_SelectedCategoryNames);
+        console.log(this.map_KnowledgeArticlesByCategoryMaster);
+        this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(this.map_KnowledgeArticlesByCategoryMaster));
+        this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
+            this.strUserLanguage, 
+            this.map_knowledgeArticlesByCategory
+        );
+        this.blnIsLoading = false;
     }
 
 

@@ -11,6 +11,7 @@ import { keyCodes, deepCopy } from 'c/utilsPrivate';
 import UserPreferencesShowWorkPhoneToExternalUsers from '@salesforce/schema/User.UserPreferencesShowWorkPhoneToExternalUsers';
 //CLDEL00026 - "Category Name" (It stores the label for column name in tree)
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
+
 export default class cTree extends LightningElement {
     @api header;
     @api draggable;
@@ -19,6 +20,7 @@ export default class cTree extends LightningElement {
     @api strFontStyle;
     @api blnSetUnderline;
     @api strFontColor;
+    @api recordId;
     
     @track strTreeTitle = CLDEL00026;
     @track _currentFocusedItem = null;
@@ -26,6 +28,7 @@ export default class cTree extends LightningElement {
     @track _key;
     @track _focusedChild = null;
     @track _items = [];
+    @track articleItemSelected = null;
 
     _defaultFocused = { key: '1', parent: '0' };
     _selected = null;
@@ -283,6 +286,15 @@ export default class cTree extends LightningElement {
 
             this.hasDetachedListeners = false;
         }
+
+        //Highlight the Tree Item if the recordId matches with the record page.
+        if (this.treedata && this.treedata.hasOwnProperty('_nameKeyMapping') &&
+            this.recordId && this.treedata._nameKeyMapping[this.recordId]
+        ) {
+            const key = this.treedata._nameKeyMapping[this.recordId];
+            this.articleItemSelected = this.treedata.getItem(key);
+            this.setFocusToItem(this.articleItemSelected);
+        }
     }
 
     disconnectedCallback() {
@@ -306,6 +318,9 @@ export default class cTree extends LightningElement {
                 this.dispatchSelectEvent(item.treeNode);
                 this.setFocusToItem(item);
             }
+        }
+        if (this.articleItemSelected && this.recordId) {
+            this.setFocusToItem(this.articleItemSelected);
         }
     }
 

@@ -30,6 +30,7 @@ import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
 
 export default class Del_dataCategoryTree extends NavigationMixin(LightningElement) {
+    @api recordId;
     @api strPageName;
     @api blnShowExpandCollpaseButton;
     @api blnDefaultExpandCollapse;
@@ -219,6 +220,14 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
             if (objCategory.hasOwnProperty("Title")) {
                 objCategory["label"] = objCategory.Title;
                 objCategory["name"] = this.blnIsPortalEnabled ? objCategory.KnowledgeArticleId : objCategory.Id;
+                if (this.blnIsPortalEnabled) {
+                    objCategory["name"] = objCategory.KnowledgeArticleId;
+                    if (this.recordId == objCategory.Id) {
+                        this.recordId = objCategory.KnowledgeArticleId;
+                    }
+                } else {
+                    objCategory["name"] = objCategory.Id;
+                }
                 objCategory["expanded"] = false;
                 objCategory["type"] = 'url';
 
@@ -481,6 +490,8 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         });
         let list_ArticlesIds = list_Articles.map(objArticle => objArticle.name);
         if (list_ArticlesIds.includes(event.detail.name)){
+            if (this.recordId && event.detail.name == this.recordId) 
+            return;
             this[NavigationMixin.GenerateUrl]({
                 type: "standard__recordPage",
                 attributes: {
@@ -540,7 +551,8 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         saveCategories({
             list_SubcategoriesSelected: listFinalCategories,
             map_CategoryByParent: this.map_CategoryByParent,
-            strPageName: this.strPageName
+            strPageName: this.strPageName,
+            list_KnowledgeArticles: []
         })
         .then(result => {
             this.showToastMessage(CLDEL00007, CLDEL00033+' '+this.strPageName, 'success');
