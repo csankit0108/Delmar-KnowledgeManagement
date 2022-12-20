@@ -488,7 +488,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                     actionName: "view"
                 }
             }).then((url) => {
-                window.open(url);
+                window.open(url,'_self');
             });
         }
     }
