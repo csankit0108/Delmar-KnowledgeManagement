@@ -99,11 +99,17 @@ public class DEL_KnowledgeManagementControllerTest {
             list_CategoryWrapper.add(objCategoryWrapper);
         }
 
+        Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
         objNewCategoryWrapper.name = 'Bookings';
         objNewCategoryWrapper.SortOrder = '2';
         list_CategoryWrapper.add(objNewCategoryWrapper);
-        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(objWrapper.map_CategoryByParent, list_CategoryWrapper, 'Admin_Setup');
+        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(
+                                                                            objWrapper.map_CategoryByParent, 
+                                                                            list_CategoryWrapper, 
+                                                                            'Admin_Setup', 
+                                                                            map_AllKnowledgeArticlesByCategory.get('Client_Bookings')
+                                                                            );
         Test.stopTest();
         System.assertEquals(5, list_KnowledgeConfigurations.size(), 'Category not added!');
     }
@@ -122,9 +128,13 @@ public class DEL_KnowledgeManagementControllerTest {
                 list_CategoryWrapper.add(objCategoryWrapper);
             }
         }
-
+        Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
-        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(objWrapper.map_CategoryByParent, list_CategoryWrapper, 'Admin_Setup');
+        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(
+                                                                            objWrapper.map_CategoryByParent,
+                                                                            list_CategoryWrapper, 
+                                                                            'Admin_Setup', 
+                                                                            map_AllKnowledgeArticlesByCategory.get('Client_Bookings'));
         Test.stopTest();
         List<DEL_KnowledgeConfiguration__c> list_AvailableKnowledgeConfigurations = [SELECT Id FROM DEL_KnowledgeConfiguration__c];
         System.assertEquals(2, list_AvailableKnowledgeConfigurations.size(), 'Categories are not removed!');

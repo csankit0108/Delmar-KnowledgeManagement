@@ -4,7 +4,6 @@ import { refreshApex } from "@salesforce/apex";
 import { NavigationMixin } from 'lightning/navigation';
 import getCategoryData from "@salesforce/apex/DEL_KnowledgeManagementController.getDescribeDataCategoryGroupStructureResults";
 import saveSelectedCategories from "@salesforce/apex/DEL_KnowledgeManagementController.saveCategories";
-import setknowledgeArticlesOrder from '@salesforce/apex/DEL_KnowledgeManagementController.setknowledgeArticlesOrder';
 
 //CLDEL00001 - "Error" (It stores the default title for error toast message.)
 import CLDEL00001 from "@salesforce/label/c.CLDEL00001";
@@ -54,13 +53,16 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     map_knowledgeArticlesByCategory;
     map_UniqueNameCategoriesByLabelName;
     strUserLanguage;
+    //Backup for articles map
+    map_KnowledgeArticlesByCategoryMaster;
 
-    map_CategoryByParent = [];
-    map_NameToIndexMapping = [];
+    list_ArticlesToSave = [];
     list_FinalSortedCategories = [];
     list_GroupCategoryNames = [];
     list_selectedConfigurationNames = [];
     map_ChildCategoriesByParent = [];
+    map_CategoryByParent = [];
+    map_NameToIndexMapping = [];
 
     @track blnIsLoading = false;
     @track blnDisableSaveButton = true;
@@ -120,6 +122,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         const {error, data} = result;
         if (data) {
             this.gridData = [];
+            this.list_ArticlesToSave = [];
             this.list_SelectedCategories = [];
             this.list_KnowledgeArticles = null;
             this.strKnowledgeArticleTableTitle = null;
@@ -134,11 +137,15 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.map_UniqueNameCategoriesByLabelName = data.map_CategoriesByUniqueName;
             this.map_ChildCategoriesByParent = JSON.parse(JSON.stringify(data.map_ChildCategoriesByParent));
             this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
+            this.map_KnowledgeArticlesByCategoryMaster = JSON.parse(JSON.stringify(this.map_knowledgeArticlesByCategory));
             this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
             if (data.hasOwnProperty("objUserInformation")) {
                 this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
-                this.filterKnowledgeArticles(data.objUserInformation.LanguageLocaleKey);
+                this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
+                    data.objUserInformation.LanguageLocaleKey, 
+                    this.map_knowledgeArticlesByCategory
+                );
                 this.strUserLanguage = data.objUserInformation.LanguageLocaleKey;
             }
 
@@ -169,9 +176,11 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             }
 
             this.blnIsLoading = false;
+            this.blnDisableSaveButton = false;
         } else if (error) {
             this.showToastMessage(CLDEL00001, error.body.message , 'error');
             this.blnIsLoading = false;
+            this.blnDisableSaveButton = false;
         }
     }
 
@@ -196,10 +205,11 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
      * @ author      : Vinay kant
      * @ description : This method will filter knowledge article records based on logged-in user preference language.
      * @ params      : 'strUserLanguageCode' - Current logged-in user preference language code.
+     *                 'map_ArticlesByCategory' - Map of Knowledge articles by category name.
     **/
-    filterKnowledgeArticles (strUserLanguageCode) {
-        Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
-            let listKnowledgeArticlesCategory = this.map_knowledgeArticlesByCategory[eachCategory];
+    filterKnowledgeArticles(strUserLanguageCode, map_ArticlesByCategory) {
+        Object.keys(map_ArticlesByCategory).forEach(eachCategory => {
+            let listKnowledgeArticlesCategory = map_ArticlesByCategory[eachCategory];
             let listKnowledgeArticlesTemp = [];
             let map_ArticlesByKnowledgeArticleId = {};
             for (let article of listKnowledgeArticlesCategory) {
@@ -221,8 +231,10 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
                 }
                 listKnowledgeArticlesTemp.push(...filtered_Articles);
             });
-            this.map_knowledgeArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
+            map_ArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
         });
+
+        return map_ArticlesByCategory;
     }
 
     /**
@@ -356,6 +368,23 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     }
 
     /**
+    *@ author      : Vinay kant
+    *@ description : This method will assign 'SortOrder__c' property on Knowledge Article and fetch all articles under each category.
+    **/
+    getAllUpdatedKnowledgeArticles () {
+        Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
+            let list_articlesHaveSortOrder = [...this.map_knowledgeArticlesByCategory[eachCategory]].filter(element => element.hasOwnProperty('SortOrder__c'));
+            let intLengthListKnowledgeArticles = list_articlesHaveSortOrder.length;
+            [...this.map_knowledgeArticlesByCategory[eachCategory]].forEach(knowledgeArticle => {
+                if (!knowledgeArticle.hasOwnProperty('SortOrder__c')) {
+                    knowledgeArticle['SortOrder__c'] = ++intLengthListKnowledgeArticles;
+                }
+            });
+            this.list_ArticlesToSave.push(...this.map_knowledgeArticlesByCategory[eachCategory]);
+        });
+    }
+
+    /**
     *@ author      : Rakesh Nayak
     *@ description : This method is used to create/update knowlwdge configuration records and update knowledge 
     *                article records on click of save button
@@ -364,73 +393,33 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.blnIsLoading = true;
         this.list_FinalSortedCategories = [];
         this.assignSortOrder(this.list_SelectedCategories);
-        if (this.list_KnowledgeArticles) {
-            this.setSortOrderForKnowledgeArticles();
-        }
-
-        const promiseSaveArticlesAndCategories = new Promise((resolve, reject) => {
-            let allRunSuccessfully = {};
-
-            //Calling this function to save Categories order 
-            //Class&MethodName - DEL_KnowledgemanagementController.saveCategories()
-            saveSelectedCategories({
-                list_SubcategoriesSelected: this.list_FinalSortedCategories,
-                map_CategoryByParent: this.map_CategoryByParent,
-                strPageName: 'Admin_Setup'
-             })
-            .then(result => {
-                allRunSuccessfully["status"] = true;
-                allRunSuccessfully["message"] = CLDEL00035;
-            })
-            .catch(error => {
-                allRunSuccessfully["status"] = false;
-                allRunSuccessfully["message"] = error.body.message;
-            })
-            .finally(() => {
-                //Calling this function to save Knowledge Articles order 
-                //Class&MethodName - DEL_KnowledgemanagementController.setknowledgeArticlesOrder()
-                if (this.list_KnowledgeArticles) {
-                    setknowledgeArticlesOrder({list_KnowledgeArticles : this.list_KnowledgeArticles})
-                    .then(result => {
-                        allRunSuccessfully["status"] = true;
-                        allRunSuccessfully["message"] = CLDEL00035;
-                    })
-                    .catch(error => {
-                        allRunSuccessfully["status"] = false;
-                        allRunSuccessfully["message"] = error.body.message;
-                    })
-                    .finally(() => {
-                        if (allRunSuccessfully["status"]) {
-                            resolve(allRunSuccessfully["message"]);
-                        } else {
-                            reject(allRunSuccessfully["message"]);
-                        }
-                    });
-                } else {
-                    if (allRunSuccessfully["status"]) {
-                        resolve(allRunSuccessfully["message"]);
-                    } else {
-                        reject(allRunSuccessfully["message"]);
-                    }
-                }
-            });
-        });
+        this.getAllUpdatedKnowledgeArticles();
 
         /**
         *@ author      : Vinaykant
-        *@ description : This will provide the message/status upon 'DEL_KnowledgemanagementController.setknowledgeArticlesOrder()'
-                        and 'DEL_KnowledgemanagementController.saveCategories()' apex class methods execution. 
+        *@ description : This Apex Class call will save all arranged articles and categories.
+        *@ params      : 'list_SubcategoriesSelected' - List of all the arranged selected catgories.
+                       : 'map_CategoryByParent' - List of all catgories mapped with their category names.
+                       : 'strPageName' - Page Name/ Instance Name.
+                       : 'list_KnowledgeArticles' - List of all the arranged Knowledge Articles.
         **/
-        promiseSaveArticlesAndCategories.then(message => {
-            this.showToastMessage(CLDEL00007, message, 'success');
-        }).catch(message => {
-            this.showToastMessage(CLDEL00001, message, 'error');
-        }).finally(() => {
+        saveSelectedCategories({
+            list_SubcategoriesSelected: this.list_FinalSortedCategories,
+            map_CategoryByParent: this.map_CategoryByParent,
+            strPageName: 'Admin_Setup',
+            list_KnowledgeArticles : this.list_ArticlesToSave
+        })
+        .then(result => {
+            this.showToastMessage(CLDEL00007, CLDEL00035, 'success');
+        })
+        .catch(error => {
+            this.showToastMessage(CLDEL00001, error.body.message, 'error');
+        })
+        .finally(() => {
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
             refreshApex(this.wiredCategoryData);
         });
-        
     }
 
     /**
@@ -490,7 +479,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method is used to get all the child categories for the selected categories.
     *                
     **/
-    fetchChildCategories (list_Categories, list_AllChildCategories) {
+    fetchChildCategories(list_Categories, list_AllChildCategories) {
         let strCategory = list_Categories[0];
         if(this.map_ChildCategoriesByParent[strCategory]) {
             for (let strChildCategory of this.map_ChildCategoriesByParent[strCategory]) {
@@ -601,14 +590,21 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method is used to handle the operations on click of Reset button
     **/
     handleOnReset(event) {
+        this.blnIsLoading = true;
         this.blnIsResetDisabled = true;
-        this.blnDisableSaveButton = true;
+        this.blnDisableSaveButton = false;
         this.list_KnowledgeArticles = null;
         this.strKnowledgeArticleTableTitle = null;
         this.list_SelectedCategories = [];
         this.list_SelectedCategoryNames = this.list_selectedConfigurationNames;
         this.list_SelectedCategoryNamesBackup = this.list_selectedConfigurationNames;
         this.createTree(this.list_SelectedCategoryNames);
+        this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(this.map_KnowledgeArticlesByCategoryMaster));
+        this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
+            this.strUserLanguage, 
+            this.map_knowledgeArticlesByCategory
+        );
+        this.blnIsLoading = false;
     }
 
 

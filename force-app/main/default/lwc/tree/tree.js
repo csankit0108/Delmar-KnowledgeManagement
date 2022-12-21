@@ -11,6 +11,7 @@ import { keyCodes, deepCopy } from 'c/utilsPrivate';
 import UserPreferencesShowWorkPhoneToExternalUsers from '@salesforce/schema/User.UserPreferencesShowWorkPhoneToExternalUsers';
 //CLDEL00026 - "Category Name" (It stores the label for column name in tree)
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
+
 export default class cTree extends LightningElement {
     @api header;
     @api draggable;
@@ -19,6 +20,7 @@ export default class cTree extends LightningElement {
     @api strFontStyle;
     @api blnSetUnderline;
     @api strFontColor;
+    @api recordId;
     
     @track strTreeTitle = CLDEL00026;
     @track _currentFocusedItem = null;
@@ -283,6 +285,7 @@ export default class cTree extends LightningElement {
 
             this.hasDetachedListeners = false;
         }
+
     }
 
     disconnectedCallback() {

@@ -10,7 +10,6 @@
         <target>lightningCommunity__Page</target>
         <target>lightningCommunity__Default</target>
     </targets>
-
     <targetConfigs>  
         <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage,lightningCommunity__Default">
             <property name="blnShowExpandCollpaseButton" type="Boolean" default="true" label="Show Expand/Collapse Button"/>
@@ -22,8 +21,5 @@
             <property name="strFontStyle" type="String" datasource="normal,italic" label="Font Style" default="normal"/>
             <property name="blnSetUnderline" type="Boolean" label="Add underline to article names" default="true"/>
         </targetConfig>
-    </targetConfigs>
-
-
-    
+    </targetConfigs>  
 </LightningComponentBundle>
