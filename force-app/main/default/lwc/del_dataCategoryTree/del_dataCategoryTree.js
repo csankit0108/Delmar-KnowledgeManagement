@@ -28,7 +28,6 @@ import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 //CLDEL00033 - "Successfully Saved Categories for" (It stores the Success Message for Successfully Saving of Selected Categories.)
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
-
 export default class Del_dataCategoryTree extends NavigationMixin(LightningElement) {
     @api strPageName;
     @api blnShowExpandCollpaseButton;
@@ -178,9 +177,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                 
                 if (this.list_GroupCategoryNames.includes(this.map_CategoryByParent[objKnowledgeConfiguration.Name])) {
                     if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                            root.items = [...(root["items"] || []), objArticle];
-                        }
+                        root.items = [...(this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name] || []), ...(root["items"] || [])];
                     }
                     this.items.push(root);
                 } else {
@@ -190,9 +187,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                     }
                     let child = list_KnowledgeConfigsRecords[nameMappingConfigs[objKnowledgeConfiguration.Name]];
                     if (this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                        for (let objArticle of this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name]) {
-                            child.items = [...(child["items"] || []), objArticle];
-                        }
+                        child.items = [...(this.map_ArticlesByCategoryName[objKnowledgeConfiguration.Name] || []), ...(child["items"] || [])];
                     }
                 }
             } else {
@@ -485,6 +480,8 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         });
         let list_ArticlesIds = list_Articles.map(objArticle => objArticle.name);
         if (list_ArticlesIds.includes(event.detail.name)){
+            if (this.recordId && event.detail.name == this.recordId) 
+            return;
             this[NavigationMixin.GenerateUrl]({
                 type: "standard__recordPage",
                 attributes: {
@@ -492,7 +489,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
                     actionName: "view"
                 }
             }).then((url) => {
-                window.open(url);
+                window.open(url,'_self');
             });
         }
     }
@@ -544,7 +541,8 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         saveCategories({
             list_SubcategoriesSelected: listFinalCategories,
             map_CategoryByParent: this.map_CategoryByParent,
-            strPageName: this.strPageName
+            strPageName: this.strPageName,
+            list_KnowledgeArticles: []
         })
         .then(result => {
             this.showToastMessage(CLDEL00007, CLDEL00033+' '+this.strPageName, 'success');

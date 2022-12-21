@@ -92,7 +92,7 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ return       :  'list_KnowledgeConfigurationsforUpsert' - List of newly added/updated configurations
     **/
     @AuraEnabled
-    public static List<DEL_KnowledgeConfiguration__c> saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName) {
+    public static List<DEL_KnowledgeConfiguration__c> saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName, List<Knowledge__kav> list_KnowledgeArticles) {
         map_KnowledgeConfigurationsByName = new Map<String,DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpsert = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpdate = new List<DEL_KnowledgeConfiguration__c>();
@@ -143,6 +143,10 @@ public with sharing class DEL_KnowledgeManagementController {
                 } else {
                     list_ConfigurationsForDeletion.add(map_KnowledgeConfigurationsByName.get(strcategory));
                 }
+            }
+
+            if (!list_KnowledgeArticles.isEmpty()) {
+                setknowledgeArticlesOrder(list_KnowledgeArticles);
             }
 
             List<Database.UpsertResult> list_UpsertResults = Database.upsert(list_KnowledgeConfigurationsforUpsert, false);
