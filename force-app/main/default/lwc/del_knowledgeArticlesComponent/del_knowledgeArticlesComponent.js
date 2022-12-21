@@ -599,7 +599,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.list_SelectedCategoryNames = this.list_selectedConfigurationNames;
         this.list_SelectedCategoryNamesBackup = this.list_selectedConfigurationNames;
         this.createTree(this.list_SelectedCategoryNames);
-        console.log(this.map_KnowledgeArticlesByCategoryMaster);
         this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(this.map_KnowledgeArticlesByCategoryMaster));
         this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
             this.strUserLanguage, 
