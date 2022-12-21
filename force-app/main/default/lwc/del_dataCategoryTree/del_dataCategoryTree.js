@@ -28,9 +28,7 @@ import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 //CLDEL00033 - "Successfully Saved Categories for" (It stores the Success Message for Successfully Saving of Selected Categories.)
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
-
 export default class Del_dataCategoryTree extends NavigationMixin(LightningElement) {
-    @api recordId;
     @api strPageName;
     @api blnShowExpandCollpaseButton;
     @api blnDefaultExpandCollapse;
@@ -220,14 +218,6 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
             if (objCategory.hasOwnProperty("Title")) {
                 objCategory["label"] = objCategory.Title;
                 objCategory["name"] = this.blnIsPortalEnabled ? objCategory.KnowledgeArticleId : objCategory.Id;
-                if (this.blnIsPortalEnabled) {
-                    objCategory["name"] = objCategory.KnowledgeArticleId;
-                    if (this.recordId == objCategory.Id) {
-                        this.recordId = objCategory.KnowledgeArticleId;
-                    }
-                } else {
-                    objCategory["name"] = objCategory.Id;
-                }
                 objCategory["expanded"] = false;
                 objCategory["type"] = 'url';
 

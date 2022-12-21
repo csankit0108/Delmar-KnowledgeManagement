@@ -11,18 +11,7 @@
         <target>lightningCommunity__Default</target>
     </targets>
     <targetConfigs>  
-        <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage">
-            <property name="blnShowExpandCollpaseButton" type="Boolean" default="true" label="Show Expand/Collapse Button"/>
-            <property name="blnDefaultExpandCollapse" type="Boolean" default="true" label="Show Expanded By Default"/>
-            <property name="strPageName" type="String" label="Instance Name" required="true" />
-            <property name="intTableHeight" type="Integer" label="Height of Component (in rem)" description="Provide height values in rem unit" default="30"/>
-            <property name="strFontColor" type="String" label="Knowledge Articles Font Color" description="Provide color values in hex format" placeholder="Enter color value in HEX format" default="#0000ff"/>
-            <property name="strFontWeight" type="String" datasource="normal,bold,bolder,thinner" label="Font Weight" default="normal"/>
-            <property name="strFontStyle" type="String" datasource="normal,italic" label="Font Style" default="normal"/>
-            <property name="blnSetUnderline" type="Boolean" label="Add underline to article names" default="true"/>
-        </targetConfig>
-        <targetConfig targets="lightningCommunity__Default">
-            <property name="recordId" type="String"></property>
+        <targetConfig targets="lightning__HomePage,lightning__RecordPage,lightning__AppPage,lightningCommunity__Default">
             <property name="blnShowExpandCollpaseButton" type="Boolean" default="true" label="Show Expand/Collapse Button"/>
             <property name="blnDefaultExpandCollapse" type="Boolean" default="true" label="Show Expanded By Default"/>
             <property name="strPageName" type="String" label="Instance Name" required="true" />
