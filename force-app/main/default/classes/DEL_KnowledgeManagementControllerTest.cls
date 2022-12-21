@@ -134,7 +134,7 @@ public class DEL_KnowledgeManagementControllerTest {
                                                                             objWrapper.map_CategoryByParent,
                                                                             list_CategoryWrapper, 
                                                                             'Admin_Setup', 
-                                                                            map_AllKnowledgeArticlesByCategory.get('Client_Bookings'));
+                                                                            map_AllKnowledgeArticlesByCategory.get('About_DCMS'));
         Test.stopTest();
         List<DEL_KnowledgeConfiguration__c> list_AvailableKnowledgeConfigurations = [SELECT Id FROM DEL_KnowledgeConfiguration__c];
         System.assertEquals(2, list_AvailableKnowledgeConfigurations.size(), 'Categories are not removed!');
