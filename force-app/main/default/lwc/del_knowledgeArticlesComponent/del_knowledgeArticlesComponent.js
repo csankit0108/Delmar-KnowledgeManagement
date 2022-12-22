@@ -419,6 +419,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
             refreshApex(this.wiredCategoryData);
+            this.blnIsLoading = false;
         });
     }
 
