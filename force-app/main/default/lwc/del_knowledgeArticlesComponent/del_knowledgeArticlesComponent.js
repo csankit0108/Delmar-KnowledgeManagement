@@ -121,62 +121,68 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.wiredCategoryData  = result;
         const {error, data} = result;
         if (data) {
-            this.gridData = [];
-            this.list_ArticlesToSave = [];
-            this.list_SelectedCategories = [];
-            this.list_KnowledgeArticles = null;
-            this.strKnowledgeArticleTableTitle = null;
-            this.blnSelectedExpandCollapseTree = true;
-            this.blnSelectedExpandCollapseTreeGrid = false;
+            if (data.blnIsSuccess) {
+                this.gridData = [];
+                this.list_ArticlesToSave = [];
+                this.list_SelectedCategories = [];
+                this.list_KnowledgeArticles = null;
+                this.strKnowledgeArticleTableTitle = null;
+                this.blnSelectedExpandCollapseTree = true;
+                this.blnSelectedExpandCollapseTreeGrid = false;
 
-            let list_AllCategories = JSON.parse(JSON.stringify(data.list_AllCategories));
-            this.map_CategoryByParent = data.map_CategoryByParent;
-            this.list_SelectedCategoryNames = data.list_DefaultSortedCategories;
-            this.list_SelectedCategoryNamesBackup = data.list_DefaultSortedCategories;
-            this.list_selectedConfigurationNames = data.list_DefaultSortedCategories;
-            this.map_UniqueNameCategoriesByLabelName = data.map_CategoriesByUniqueName;
-            this.map_ChildCategoriesByParent = JSON.parse(JSON.stringify(data.map_ChildCategoriesByParent));
-            this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
-            this.map_KnowledgeArticlesByCategoryMaster = JSON.parse(JSON.stringify(this.map_knowledgeArticlesByCategory));
-            this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
+                let list_AllCategories = JSON.parse(JSON.stringify(data.list_AllCategories));
+                this.map_CategoryByParent = data.map_CategoryByParent;
+                this.list_SelectedCategoryNames = data.list_DefaultSortedCategories;
+                this.list_SelectedCategoryNamesBackup = data.list_DefaultSortedCategories;
+                this.list_selectedConfigurationNames = data.list_DefaultSortedCategories;
+                this.map_UniqueNameCategoriesByLabelName = data.map_CategoriesByUniqueName;
+                this.map_ChildCategoriesByParent = JSON.parse(JSON.stringify(data.map_ChildCategoriesByParent));
+                this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
+                this.map_KnowledgeArticlesByCategoryMaster = JSON.parse(JSON.stringify(this.map_knowledgeArticlesByCategory));
+                this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
-            if (data.hasOwnProperty("objUserInformation")) {
-                this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
-                this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
-                    data.objUserInformation.LanguageLocaleKey, 
-                    this.map_knowledgeArticlesByCategory
-                );
-                this.strUserLanguage = data.objUserInformation.LanguageLocaleKey;
-            }
-
-            this.createTree(this.list_SelectedCategoryNames);
-
-            this.map_NameToIndexMapping = list_AllCategories.reduce( (objMapNameToIndex, objCategoryName, index) => {
-                objCategoryName.categoryLabel = this.map_UniqueNameCategoriesByLabelName[objCategoryName.name];
-                objMapNameToIndex[objCategoryName.name] = index;
-                return objMapNameToIndex;
-            }, {} );
-
-            list_AllCategories.forEach(objCategoryName => {
-                let root = {};
-                if (!this.map_CategoryByParent[objCategoryName.name]) {
-                    root = objCategoryName;
-                    this.gridData.push(root);
-                } else {
-                    let parentCategory = list_AllCategories[this.map_NameToIndexMapping[this.map_CategoryByParent[objCategoryName.name]]];
-                    if (parentCategory) {
-                        parentCategory._children = [...(parentCategory["_children"] || []), objCategoryName];
-                    }
+                if (data.hasOwnProperty("objUserInformation")) {
+                    this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
+                    this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
+                        data.objUserInformation.LanguageLocaleKey, 
+                        this.map_knowledgeArticlesByCategory
+                    );
+                    this.strUserLanguage = data.objUserInformation.LanguageLocaleKey;
                 }
-            });
-            this.blnShowTreeGrid = true;
-            this.list_Categories = [];
-            for (let objParentCategory of data.list_ParentCategoryNames) {
-                this.list_Categories.push({ label: objParentCategory, value: objParentCategory});
-            }
 
-            this.blnIsLoading = false;
-            this.blnDisableSaveButton = false;
+                this.createTree(this.list_SelectedCategoryNames);
+
+                this.map_NameToIndexMapping = list_AllCategories.reduce( (objMapNameToIndex, objCategoryName, index) => {
+                    objCategoryName.categoryLabel = this.map_UniqueNameCategoriesByLabelName[objCategoryName.name];
+                    objMapNameToIndex[objCategoryName.name] = index;
+                    return objMapNameToIndex;
+                }, {} );
+
+                list_AllCategories.forEach(objCategoryName => {
+                    let root = {};
+                    if (!this.map_CategoryByParent[objCategoryName.name]) {
+                        root = objCategoryName;
+                        this.gridData.push(root);
+                    } else {
+                        let parentCategory = list_AllCategories[this.map_NameToIndexMapping[this.map_CategoryByParent[objCategoryName.name]]];
+                        if (parentCategory) {
+                            parentCategory._children = [...(parentCategory["_children"] || []), objCategoryName];
+                        }
+                    }
+                });
+                this.blnShowTreeGrid = true;
+                this.list_Categories = [];
+                for (let objParentCategory of data.list_ParentCategoryNames) {
+                    this.list_Categories.push({ label: objParentCategory, value: objParentCategory});
+                }
+
+                this.blnIsLoading = false;
+                this.blnDisableSaveButton = false;
+            } else {
+                this.showToastMessage(CLDEL00001, data.strErrorMessage , 'error');
+                this.blnIsLoading = false;
+                this.blnDisableSaveButton = false;
+            }
         } else if (error) {
             this.showToastMessage(CLDEL00001, error.body.message , 'error');
             this.blnIsLoading = false;
@@ -410,7 +416,11 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             list_KnowledgeArticles : this.list_ArticlesToSave
         })
         .then(result => {
-            this.showToastMessage(CLDEL00007, CLDEL00035, 'success');
+            if (result.blnIsSuccess) {
+                this.showToastMessage(CLDEL00007, CLDEL00035, 'success');
+            } else {
+                this.showToastMessage(CLDEL00001, result.strErrorMessage, 'error');
+            }
         })
         .catch(error => {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
@@ -419,7 +429,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
             refreshApex(this.wiredCategoryData);
-            this.blnIsLoading = false;
         });
     }
 
@@ -509,10 +518,10 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     **/
     getParentCategories(strSubcategory, list_AllParentNames) {
         if (this.map_CategoryByParent[strSubcategory]) {
-                if (!list_AllParentNames.includes(this.map_CategoryByParent[strSubcategory])) {
-                    list_AllParentNames.unshift(this.map_CategoryByParent[strSubcategory]);
-                    this.getParentCategories(this.map_CategoryByParent[strSubcategory], list_AllParentNames);
-                }
+            if (!list_AllParentNames.includes(this.map_CategoryByParent[strSubcategory])) {
+                list_AllParentNames.unshift(this.map_CategoryByParent[strSubcategory]);
+                this.getParentCategories(this.map_CategoryByParent[strSubcategory], list_AllParentNames);
+            }
             return list_AllParentNames;
         } else {
             return list_AllParentNames;
@@ -600,6 +609,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.list_SelectedCategoryNames = this.list_selectedConfigurationNames;
         this.list_SelectedCategoryNamesBackup = this.list_selectedConfigurationNames;
         this.createTree(this.list_SelectedCategoryNames);
+        console.log(this.map_KnowledgeArticlesByCategoryMaster);
         this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(this.map_KnowledgeArticlesByCategoryMaster));
         this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
             this.strUserLanguage, 
