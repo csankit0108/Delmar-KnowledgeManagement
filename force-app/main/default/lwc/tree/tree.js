@@ -28,6 +28,7 @@ export default class cTree extends LightningElement {
     @track _key;
     @track _focusedChild = null;
     @track _items = [];
+    @track articleItemSelected = null;
 
     _defaultFocused = { key: '1', parent: '0' };
     _selected = null;
@@ -286,6 +287,27 @@ export default class cTree extends LightningElement {
             this.hasDetachedListeners = false;
         }
 
+        //Highlight the Tree Item if the recordId matches with the record page.
+        if (this.treedata && this.treedata.hasOwnProperty('_nameKeyMapping') &&
+            this.recordId && this.treedata._nameKeyMapping[this.recordId]
+        ) {
+            const key = this.treedata._nameKeyMapping[this.recordId];
+            this.articleItemSelected = this.treedata.getItem(key);
+            this.setFocusToItem(this.articleItemSelected);
+            const articleItemSelectedParentKey = this.treedata._indices[key].parent;
+            let articleParentCategoryName = this.treedata.getItem(articleItemSelectedParentKey).treeNode.name;
+
+            const customEvent = new CustomEvent('privateselectedtreeitemparent', {
+                bubbles: true,
+                composed: true,
+                cancelable: true,
+                detail: {
+                    selectedItemParentName : articleParentCategoryName
+                }
+            });
+    
+            this.dispatchEvent(customEvent);
+        }
     }
 
     disconnectedCallback() {
@@ -309,6 +331,9 @@ export default class cTree extends LightningElement {
                 this.dispatchSelectEvent(item.treeNode);
                 this.setFocusToItem(item);
             }
+        }
+        if (this.articleItemSelected && this.recordId) {
+            this.setFocusToItem(this.articleItemSelected);
         }
     }
 

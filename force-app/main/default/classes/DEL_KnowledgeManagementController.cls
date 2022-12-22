@@ -28,6 +28,8 @@ public with sharing class DEL_KnowledgeManagementController {
     **/
     public class KnowledgeWrapper {
         @AuraEnabled public Boolean blnIsSuccess;
+        @AuraEnabled public String strErrorMessage;
+
         //Map of List of sub categories by top level categories
         @AuraEnabled public Map<String, List<String>> map_CategoriesByTopLevelCategories = new Map<String, List<String>>();
         //This map defines what is the parent category for a sub category
@@ -49,6 +51,11 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
+
+        public KnowledgeWrapper() {
+            this.blnIsSuccess = true;
+            this.strErrorMessage = '';
+        }
     }
 
     /**
@@ -70,6 +77,9 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ Author   :  Ankit CS
     **/
     public class TableofContentsWrapper {
+        @AuraEnabled public Boolean blnIsSuccess;
+        @AuraEnabled public String strErrorMessage;
+
         //This map defines what is the parent category for a sub category
         @AuraEnabled public Map<String, String> map_CategoryByParent = new Map<String, String>();
         @AuraEnabled public Map<String, List<Knowledge__kav>> map_ArticlesByCategoryName = new Map<String, List<Knowledge__kav>>();
@@ -81,6 +91,11 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
+
+        public TableofContentsWrapper() {
+            this.blnIsSuccess = true;
+            this.strErrorMessage = '';
+        }
     }
 
     /**
@@ -92,7 +107,7 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ return       :  'list_KnowledgeConfigurationsforUpsert' - List of newly added/updated configurations
     **/
     @AuraEnabled
-    public static List<DEL_KnowledgeConfiguration__c> saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName, List<Knowledge__kav> list_KnowledgeArticles) {
+    public static KnowledgeWrapper saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName, List<Knowledge__kav> list_KnowledgeArticles) {
         map_KnowledgeConfigurationsByName = new Map<String,DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpsert = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpdate = new List<DEL_KnowledgeConfiguration__c>();
@@ -103,6 +118,7 @@ public with sharing class DEL_KnowledgeManagementController {
         List<DEL_KnowledgeConfiguration__c> list_ConfigurationsForDeletion = new List<DEL_KnowledgeConfiguration__c>();
         //List of  errors from all the DML operations
         List<String> list_ConsolidatedDMLErrors =new List<String>();
+        KnowledgeWrapper objKnowledgeWrapper = new KnowledgeWrapper();
 
         try {
             for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : [SELECT 
@@ -146,7 +162,7 @@ public with sharing class DEL_KnowledgeManagementController {
             }
 
             if (!list_KnowledgeArticles.isEmpty()) {
-                setknowledgeArticlesOrder(list_KnowledgeArticles);
+                objKnowledgeWrapper = setknowledgeArticlesOrder(list_KnowledgeArticles);
             }
 
             List<Database.UpsertResult> list_UpsertResults = Database.upsert(list_KnowledgeConfigurationsforUpsert, false);
@@ -180,8 +196,6 @@ public with sharing class DEL_KnowledgeManagementController {
                 );
             }
 
-            return list_KnowledgeConfigurationsforUpsert;
-
         } catch (Exception objException) {
             DEL_Utils.logException(
                 'DEL_KnowledgeManagementController',
@@ -189,8 +203,10 @@ public with sharing class DEL_KnowledgeManagementController {
                 objException,
                 true
             );
-            return list_KnowledgeConfigurationsforUpsert; 
+            objKnowledgeWrapper.blnIsSuccess = false;
+            objKnowledgeWrapper.strErrorMessage = objException.getMessage();
         }
+        return objKnowledgeWrapper;
     }
 
     @AuraEnabled(cacheable = true)
@@ -368,7 +384,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 objWrapper.map_CategoriesByUniqueName = map_CategoriesByUniqueName;
                 Id idUserId = UserInfo.getUserId();
                 objWrapper.objUserInformation = getCurrentUserDetails(idUserId);
-                return objWrapper;
+                
             } catch(Exception objException) {
                 DEL_Utils.logException(
                     'DEL_KnowledgeManagementController',
@@ -376,8 +392,10 @@ public with sharing class DEL_KnowledgeManagementController {
                     objException,
                     true
                 );
-                return objWrapper;
+                objWrapper.blnIsSuccess = false;
+                objWrapper.strErrorMessage = objException.getMessage();
             }
+            return objWrapper;
     }
 
     /**
@@ -515,7 +533,8 @@ public with sharing class DEL_KnowledgeManagementController {
                     objException,
                     true
                 );
-                return objWrapper;
+                objWrapper.blnIsSuccess = false;
+                objWrapper.strErrorMessage = objException.getMessage();
             }
             return objWrapper;
         }
@@ -657,7 +676,8 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ params       :  'list_KnowledgeArticles' - list of Knowledge Articles
     **/
     @AuraEnabled
-    public static void setknowledgeArticlesOrder(List<Knowledge__kav> list_KnowledgeArticles) {
+    public static KnowledgeWrapper setknowledgeArticlesOrder(List<Knowledge__kav> list_KnowledgeArticles) {
+        KnowledgeWrapper objKnowledgeWrapper = new KnowledgeWrapper();
         Map<Id, Knowledge__kav> map_KnowledgeArticleByKnowledgeId = new Map<Id, Knowledge__kav>();
         List<Id> list_DraftArticleIds = new List<Id>();
         List<Id> list_KnowledgeArticlesIds = new List<Id>();
@@ -724,8 +744,11 @@ public with sharing class DEL_KnowledgeManagementController {
                 objException,
                 true
             );
-            throw new AuraHandledException(objException.getMessage());
+            objKnowledgeWrapper.blnIsSuccess = false;
+            objKnowledgeWrapper.strErrorMessage = objException.getMessage();
         }
+
+        return objKnowledgeWrapper;
     }
 
     /**
@@ -737,6 +760,8 @@ public with sharing class DEL_KnowledgeManagementController {
      **/
     @AuraEnabled(cacheable = true)
     public static Map<String, Knowledge__kav> DEL_Nxtprev (Id recordId) {
+        Id idUserId = UserInfo.getUserId();
+        User objLoggedInUser = getCurrentUserDetails(idUserId);
         Knowledge__kav objKnowledgeArticle = [SELECT 
                                               Id, 
                                               Title, 
@@ -795,12 +820,12 @@ public with sharing class DEL_KnowledgeManagementController {
                 String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) 
             ) {
                 if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1) &&
-                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+                    objKnowledgeArticleFiltered.Language == objLoggedInUser.LanguageLocaleKey
                 ) {
                     map_articlesByNextPrevious.put('previous', objKnowledgeArticleFiltered);
                 }
                 if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1) &&
-                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+                    objKnowledgeArticleFiltered.Language == objLoggedInUser.LanguageLocaleKey
                 ) {
                     map_articlesByNextPrevious.put('next', objKnowledgeArticleFiltered);
                 }

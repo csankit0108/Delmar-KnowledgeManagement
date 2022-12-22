@@ -29,6 +29,7 @@ import CLDEL00032 from "@salesforce/label/c.CLDEL00032";
 import CLDEL00033 from "@salesforce/label/c.CLDEL00033";
 
 export default class Del_dataCategoryTree extends NavigationMixin(LightningElement) {
+    @api recordId;
     @api strPageName;
     @api blnShowExpandCollpaseButton;
     @api blnDefaultExpandCollapse;
@@ -48,6 +49,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
 
     blnEditForExpand;
     blnEditForCollapse;
+    blnRenderedCallbackFlag = true;
     blnShowGrid = false;
     blnIsEditMode = false;
     blnDraggable = false;
@@ -61,6 +63,7 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
     blnSelectedExpandCollapseTreeGrid = false;
     wiredCategoryData;
     blnIsPortalEnabled;
+    strSelectedTreeItemParentArticle;
     map_NameToIndexMapping;
     map_ArticlesByCategoryName = [];
     map_CategoryByParent = [];
@@ -81,48 +84,83 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         label: CLDEL00026
     }];
     
+    constructor() {
+        super();
+        
+        /*this.template.addEventListener(
+            'privateitemclick',
+            this.handleCategorySelect.bind(this)
+        );*/
+        
+        this.template.addEventListener(
+            'privateselectedtreeitemparent',
+            this.handleSelectedTreeItem.bind(this)
+        );
+            
+    }
+
     renderedCallback() {
         this.blnIsTreeLoaded = true;
     }
     
+    /**
+    *@ author      : Vinaykant
+    *@ description : This method will get the parent category name of selected/highlighted knowledge article from tree component
+                     and collapse the tree nodes(category) if current opened article does not fall under that tree nodes(category).
+    **/
+    handleSelectedTreeItem (event) {
+        this.strSelectedTreeItemParentArticle = event.detail.selectedItemParentName;
+        if (this.blnRenderedCallbackFlag && this.strSelectedTreeItemParentArticle && this.recordId) {
+            let list_allCategoriesNames = this.getParentCategories(this.strSelectedTreeItemParentArticle, []);
+            list_allCategoriesNames.push(this.strSelectedTreeItemParentArticle);
+            this.changeExpandCollapse(this.items, true, list_allCategoriesNames);
+            this.template.querySelector('c-tree').normalizeData(this.items);
+            this.list_Categories = this.items;
+            this.blnRenderedCallbackFlag = false;
+        }
+    }
+
     @wire(getCategorySelectionsByPage, {strPageName : '$strPageName'})
     wiredCategoryData(result) {
         this.wiredCategoryData  = result;
         const {error, data} = result;
         if (data) {
-            this.blnSelectedExpandCollapseTree = this.blnDefaultExpandCollapse;
-            this.blnShowGrid = true;
-            this.gridData = [];
-            this.list_SelectedCategoryNames = [];
-            this.list_SelectedCategoryNamesBackup = [];
-            this.list_SelectedCategoryNamesOld = [];
+            if (data.blnIsSuccess) { 
+                this.blnSelectedExpandCollapseTree = this.blnDefaultExpandCollapse;
+                this.blnShowGrid = true;
+                this.gridData = [];
+                this.list_SelectedCategoryNames = [];
+                this.list_SelectedCategoryNamesBackup = [];
+                this.list_SelectedCategoryNamesOld = [];
 
-            this.list_SelectedCategories = JSON.parse(JSON.stringify(data.list_SelectedCategories));
-            this.list_AvailableCategories = JSON.parse(JSON.stringify(data.list_AvailableCategories));
-            this.map_CategoryByParent = JSON.parse(JSON.stringify(data.map_CategoryByParent));
-            this.map_ArticlesByCategoryName = JSON.parse(JSON.stringify(data.map_ArticlesByCategoryName));
-            this.map_LabelNameByUniqueNameCategories = JSON.parse(JSON.stringify(data.map_CategoriesByUniqueName));
-            this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
+                this.list_SelectedCategories = JSON.parse(JSON.stringify(data.list_SelectedCategories));
+                this.list_AvailableCategories = JSON.parse(JSON.stringify(data.list_AvailableCategories));
+                this.map_CategoryByParent = JSON.parse(JSON.stringify(data.map_CategoryByParent));
+                this.map_ArticlesByCategoryName = JSON.parse(JSON.stringify(data.map_ArticlesByCategoryName));
+                this.map_LabelNameByUniqueNameCategories = JSON.parse(JSON.stringify(data.map_CategoriesByUniqueName));
+                this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
 
-            let objUserInformation = JSON.parse(JSON.stringify(data.objUserInformation));
-            this.blnIsPortalEnabled = data.objUserInformation.IsPortalEnabled;
-            if (objUserInformation && !objUserInformation.IsPortalEnabled && 
-                objUserInformation.hasOwnProperty('UserPermissionsKnowledgeUser') &&
-                objUserInformation["UserPermissionsKnowledgeUser"]
-            ) {
-                this.blnEditVisible = true;
+                let objUserInformation = JSON.parse(JSON.stringify(data.objUserInformation));
+                this.blnIsPortalEnabled = data.objUserInformation.IsPortalEnabled;
+                if (objUserInformation && !objUserInformation.IsPortalEnabled && 
+                    objUserInformation.hasOwnProperty('UserPermissionsKnowledgeUser') &&
+                    objUserInformation["UserPermissionsKnowledgeUser"]
+                ) {
+                    this.blnEditVisible = true;
+                }
+                this.filterKnowledgeArticles(objUserInformation.LanguageLocaleKey);
+                this.selectedCategoriesFilter(this.list_SelectedCategories);
+                this.sortTreeItems(this.list_AvailableCategories);
+                this.makeTree(this.list_AvailableCategories, false);
+                this.sortTreeItems(this.list_SelectedCategories);
+                this.makeTree(this.list_SelectedCategories, true);
+                this.changeAttributeNameOfItems(this.items);
+                this.list_Categories = this.items;
+                
+                this.template.querySelector('c-tree').normalizeData(this.list_Categories);
+            } else {
+                this.showToastMessage(CLDEL00001, data.strErrorMessage, 'error');
             }
-            this.filterKnowledgeArticles(objUserInformation.LanguageLocaleKey);
-            this.selectedCategoriesFilter(this.list_SelectedCategories);
-            this.sortTreeItems(this.list_AvailableCategories);
-            this.makeTree(this.list_AvailableCategories, false);
-            this.sortTreeItems(this.list_SelectedCategories);
-            this.makeTree(this.list_SelectedCategories, true);
-            this.changeAttributeNameOfItems(this.items);
-            this.list_Categories = this.items;
-            
-            this.template.querySelector('c-tree').normalizeData(this.list_Categories);
-            
             this.blnLoading = false;
         } else if (error) {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
@@ -217,7 +255,14 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
         list_nestedTreeNodes.forEach(objCategory => { 
             if (objCategory.hasOwnProperty("Title")) {
                 objCategory["label"] = objCategory.Title;
-                objCategory["name"] = this.blnIsPortalEnabled ? objCategory.KnowledgeArticleId : objCategory.Id;
+                if (this.blnIsPortalEnabled) {
+                    objCategory["name"] = objCategory.KnowledgeArticleId;
+                    if (this.recordId && this.recordId == objCategory.Id) {
+                        this.recordId = objCategory.KnowledgeArticleId;
+                    }
+                } else {
+                    objCategory["name"] = objCategory.Id;
+                }
                 objCategory["expanded"] = false;
                 objCategory["type"] = 'url';
 
@@ -458,13 +503,26 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
      * @ description : This recursive method will change the expanded value true/false.
      * @ params      : 'list_nestedTreeNodes' - List of nested JSON Object (Tree Structure)
     **/
-    changeExpandCollapse (list_nestedTreeNodes, blnExpandCollapse) {
+    changeExpandCollapse (list_nestedTreeNodes, blnExpandCollapse, list_allCategories = null) {
         list_nestedTreeNodes.forEach(objTreeNode => {
-            if (!objTreeNode.hasOwnProperty("Title")) {
+            if (list_allCategories) {
+                if (list_allCategories.includes(objTreeNode.name) &&
+                    !objTreeNode.hasOwnProperty("IsMasterLanguage")
+                ) {
+                    objTreeNode.expanded = blnExpandCollapse;
+                } else {
+                    objTreeNode.expanded = !blnExpandCollapse;
+                }
+
+                if (objTreeNode.items) {
+                    this.changeExpandCollapse(objTreeNode.items, blnExpandCollapse, list_allCategories);
+                }
+            } else if (!objTreeNode.hasOwnProperty("IsMasterLanguage")) {
                 objTreeNode.expanded = blnExpandCollapse;
-            }
-            if (objTreeNode.items) {
-                this.changeExpandCollapse(objTreeNode.items, blnExpandCollapse);
+                
+                if (objTreeNode.items) {
+                    this.changeExpandCollapse(objTreeNode.items, blnExpandCollapse);
+                }
             }
         });
     }
@@ -545,14 +603,17 @@ export default class Del_dataCategoryTree extends NavigationMixin(LightningEleme
             list_KnowledgeArticles: []
         })
         .then(result => {
-            this.showToastMessage(CLDEL00007, CLDEL00033+' '+this.strPageName, 'success');
-            this.blnIsEditMode = false;
+            if (result.blnIsSuccess) {
+                this.showToastMessage(CLDEL00007, CLDEL00033+' '+this.strPageName, 'success');
+                this.blnIsEditMode = false;
 
-            this.blnSelectedExpandCollapseTree = !this.blnSelectedExpandCollapseTree;
-            if (this.blnSelectedExpandCollapseTreeGrid) {
-                this.blnSelectedExpandCollapseTreeGrid = !this.blnSelectedExpandCollapseTreeGrid;
+                this.blnSelectedExpandCollapseTree = !this.blnSelectedExpandCollapseTree;
+                if (this.blnSelectedExpandCollapseTreeGrid) {
+                    this.blnSelectedExpandCollapseTreeGrid = !this.blnSelectedExpandCollapseTreeGrid;
+                }
+            } else {
+                this.showToastMessage(CLDEL00001, result.strErrorMessage, 'error');
             }
-
             refreshApex(this.wiredCategoryData);
         })
         .catch(error => {
