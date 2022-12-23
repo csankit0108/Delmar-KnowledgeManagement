@@ -104,10 +104,15 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ params       :  'map_categoryByParent'       - Map of each category and its immediate parent
     *                :  'list_SubcategoriesSelected' - List of slected subcategories from the component
     *                :  'strPageName'                - Name of the page
-    * @ return       :  'list_KnowledgeConfigurationsforUpsert' - List of newly added/updated configurations
+    * @ return       :  'map_knowledgeArticlesByCategory' - Map of Knowledge Version records by Category name
     **/
     @AuraEnabled
-    public static KnowledgeWrapper saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName, List<Knowledge__kav> list_KnowledgeArticles) {
+    public static KnowledgeWrapper saveCategories(
+        Map<String, String> map_CategoryByParent, 
+        List<Object> list_SubcategoriesSelected, 
+        String strPageName, 
+        Map<String, List<Knowledge__kav>> map_knowledgeArticlesByCategory
+    ) {
         map_KnowledgeConfigurationsByName = new Map<String,DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpsert = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpdate = new List<DEL_KnowledgeConfiguration__c>();
@@ -142,11 +147,13 @@ public with sharing class DEL_KnowledgeManagementController {
                     objKnowledgeConfiguration = map_KnowledgeConfigurationsByName.get(objWrapper.name);
                     objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
                     objKnowledgeConfiguration.PageName__c = strPageName;
+                    objKnowledgeConfiguration.Type__c = 'Data Category';
                     list_KnowledgeConfigurationsforUpdate.add(objKnowledgeConfiguration);
                 } else {
                     objKnowledgeConfiguration.Name = objWrapper.name;
                     objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
                     objKnowledgeConfiguration.PageName__c = strPageName;
+                    objKnowledgeConfiguration.Type__c = 'Data Category';
                     list_KnowledgeConfigurationsforInsert.add(objKnowledgeConfiguration);
                 }
             }
@@ -161,9 +168,26 @@ public with sharing class DEL_KnowledgeManagementController {
                 }
             }
 
-            if (!list_KnowledgeArticles.isEmpty()) {
-                objKnowledgeWrapper = setknowledgeArticlesOrder(list_KnowledgeArticles);
+            if (!map_knowledgeArticlesByCategory.isEmpty()) {
+                List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = new List<DEL_KnowledgeConfiguration__c>();
+                for (String strCategory : map_knowledgeArticlesByCategory.keySet()) {
+                    for (Integer intIndex = 0; intIndex < map_knowledgeArticlesByCategory.get(strCategory).size(); intIndex++) {
+                        DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_KnowledgeConfiguration__c(
+                            KnowledgeArticleId__c = map_knowledgeArticlesByCategory.get(strCategory)[intIndex].KnowledgeArticleId,
+                            Type__c = 'Knowledge Article',
+                            SortOrder__c = intIndex + 1,
+                            Name = strCategory
+                        );
+                        list_KnowledgeConfigurations.add(objKnowledgeConfiguration);
+                    }
+                }
+
+                insert list_KnowledgeConfigurations;
             }
+
+            /*if (!list_KnowledgeArticles.isEmpty()) {
+                objKnowledgeWrapper = setknowledgeArticlesOrder(list_KnowledgeArticles);
+            }*/
 
             List<Database.UpsertResult> list_UpsertResults = Database.upsert(list_KnowledgeConfigurationsforUpsert, false);
             list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_UpsertResults, 'Upsert'));
@@ -679,12 +703,15 @@ public with sharing class DEL_KnowledgeManagementController {
     public static KnowledgeWrapper setknowledgeArticlesOrder(List<Knowledge__kav> list_KnowledgeArticles) {
         KnowledgeWrapper objKnowledgeWrapper = new KnowledgeWrapper();
         Map<Id, Knowledge__kav> map_KnowledgeArticleByKnowledgeId = new Map<Id, Knowledge__kav>();
+        Map<Id, List<Knowledge__kav>> map_KnowledgeVersionsByArticleId = new Map<Id, List<Knowledge__kav>>();
         List<Id> list_DraftArticleIds = new List<Id>();
         List<Id> list_KnowledgeArticlesIds = new List<Id>();
         List<Knowledge__kav> list_DraftKnowledgeArticles = new List<Knowledge__kav>();
-        
+        Set<Id> set_ArticleIds = new Set<Id>();
+        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = new List<DEL_KnowledgeConfiguration__c>();
+        Map<Id, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationsByArticleId = new Map<Id, DEL_KnowledgeConfiguration__c>();
         try {
-            if (list_KnowledgeArticles.size() > 0) {
+            if (!list_KnowledgeArticles.isEmpty()) {
                 for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
                     map_KnowledgeArticleByKnowledgeId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle);
                 }

@@ -377,7 +377,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ author      : Vinay kant
     *@ description : This method will assign 'SortOrder__c' property on Knowledge Article and fetch all articles under each category.
     **/
-    getAllUpdatedKnowledgeArticles () {
+    getAllUpdatedKnowledgeArticles() {
         Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
             let list_articlesHaveSortOrder = [...this.map_knowledgeArticlesByCategory[eachCategory]].filter(element => element.hasOwnProperty('SortOrder__c'));
             let intLengthListKnowledgeArticles = list_articlesHaveSortOrder.length;
@@ -399,7 +399,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.blnIsLoading = true;
         this.list_FinalSortedCategories = [];
         this.assignSortOrder(this.list_SelectedCategories);
-        this.getAllUpdatedKnowledgeArticles();
+        //this.getAllUpdatedKnowledgeArticles();
 
         /**
         *@ author      : Vinaykant
@@ -407,13 +407,13 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         *@ params      : 'list_SubcategoriesSelected' - List of all the arranged selected catgories.
                        : 'map_CategoryByParent' - List of all catgories mapped with their category names.
                        : 'strPageName' - Page Name/ Instance Name.
-                       : 'list_KnowledgeArticles' - List of all the arranged Knowledge Articles.
+                       : 'map_knowledgeArticlesByCategory' - Map of Knowledge Version records by Category name
         **/
         saveSelectedCategories({
             list_SubcategoriesSelected: this.list_FinalSortedCategories,
             map_CategoryByParent: this.map_CategoryByParent,
             strPageName: 'Admin_Setup',
-            list_KnowledgeArticles : this.list_ArticlesToSave
+            map_knowledgeArticlesByCategory: this.map_knowledgeArticlesByCategory
         })
         .then(result => {
             if (result.blnIsSuccess) {
@@ -429,6 +429,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
             refreshApex(this.wiredCategoryData);
+            this.blnIsLoading = false;
         });
     }
 
