@@ -64,6 +64,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     map_CategoryByParent = [];
     map_NameToIndexMapping = [];
 
+    @track map_KnowledgeArticleConfigByKnowledgeArticleId;
     @track blnIsLoading = false;
     @track blnDisableSaveButton = true;
     @track blnIsResetDisabled = true;
@@ -140,6 +141,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
                 this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(data.map_KnowledgeArticlesByCategoryUniqueName));
                 this.map_KnowledgeArticlesByCategoryMaster = JSON.parse(JSON.stringify(this.map_knowledgeArticlesByCategory));
                 this.list_GroupCategoryNames = JSON.parse(JSON.stringify(data.list_GroupCategoryNames));
+                this.map_KnowledgeArticleConfigByKnowledgeArticleId = JSON.parse(JSON.stringify(data.map_KnowledgeArticleConfigByKnowledgeArticleId));
 
                 if (data.hasOwnProperty("objUserInformation")) {
                     this.visibleSaveButton = data.objUserInformation.UserPermissionsKnowledgeUser;
@@ -195,16 +197,18 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
      * @ description : This method will sort the Object based on 'SortOrder__c' attribute.
      * @ params      : 'list_KnowledgeArticles' - List of Knowledge Articles records.
     **/
-    sortObjectItems(list_KnowledgeArticles) {
+    sortObjectItems(list_KnowledgeArticles, strCategoryName) {
         return list_KnowledgeArticles.sort((objFirst, objSecond) => {
-                if (objFirst.hasOwnProperty('SortOrder__c') && objFirst.hasOwnProperty('SortOrder__c')) {
-                    var intFirstObjSortOrder = objFirst.SortOrder__c;
-                    var intSecondObjSortOrder = objSecond.SortOrder__c;
-                    if(intFirstObjSortOrder < intSecondObjSortOrder) return -1;
-                    if(intFirstObjSortOrder > intSecondObjSortOrder) return 1;
-                    return 0;
-                }
-            });
+            if (this.map_KnowledgeArticleConfigByKnowledgeArticleId[strCategoryName + objFirst.KnowledgeArticleId] && 
+                this.map_KnowledgeArticleConfigByKnowledgeArticleId[strCategoryName + objSecond.KnowledgeArticleId]
+            ) {
+                var intFirstObjSortOrder = this.map_KnowledgeArticleConfigByKnowledgeArticleId[strCategoryName + objFirst.KnowledgeArticleId].SortOrder__c;
+                var intSecondObjSortOrder = this.map_KnowledgeArticleConfigByKnowledgeArticleId[strCategoryName + objSecond.KnowledgeArticleId].SortOrder__c;
+                if(intFirstObjSortOrder < intSecondObjSortOrder) return -1;
+                if(intFirstObjSortOrder > intSecondObjSortOrder) return 1;
+                return 0;
+            }
+        });
     }
 
     /**
@@ -237,7 +241,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
                 }
                 listKnowledgeArticlesTemp.push(...filtered_Articles);
             });
-            map_ArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp);
+            map_ArticlesByCategory[eachCategory] = this.sortObjectItems(listKnowledgeArticlesTemp, eachCategory);
         });
 
         return map_ArticlesByCategory;
@@ -374,23 +378,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     }
 
     /**
-    *@ author      : Vinay kant
-    *@ description : This method will assign 'SortOrder__c' property on Knowledge Article and fetch all articles under each category.
-    **/
-    getAllUpdatedKnowledgeArticles() {
-        Object.keys(this.map_knowledgeArticlesByCategory).forEach(eachCategory => {
-            let list_articlesHaveSortOrder = [...this.map_knowledgeArticlesByCategory[eachCategory]].filter(element => element.hasOwnProperty('SortOrder__c'));
-            let intLengthListKnowledgeArticles = list_articlesHaveSortOrder.length;
-            [...this.map_knowledgeArticlesByCategory[eachCategory]].forEach(knowledgeArticle => {
-                if (!knowledgeArticle.hasOwnProperty('SortOrder__c')) {
-                    knowledgeArticle['SortOrder__c'] = ++intLengthListKnowledgeArticles;
-                }
-            });
-            this.list_ArticlesToSave.push(...this.map_knowledgeArticlesByCategory[eachCategory]);
-        });
-    }
-
-    /**
     *@ author      : Rakesh Nayak
     *@ description : This method is used to create/update knowlwdge configuration records and update knowledge 
     *                article records on click of save button
@@ -399,7 +386,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.blnIsLoading = true;
         this.list_FinalSortedCategories = [];
         this.assignSortOrder(this.list_SelectedCategories);
-        //this.getAllUpdatedKnowledgeArticles();
 
         /**
         *@ author      : Vinaykant
@@ -407,7 +393,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         *@ params      : 'list_SubcategoriesSelected' - List of all the arranged selected catgories.
                        : 'map_CategoryByParent' - List of all catgories mapped with their category names.
                        : 'strPageName' - Page Name/ Instance Name.
-                       : 'map_knowledgeArticlesByCategory' - Map of Knowledge Version records by Category name
+                       : 'list_KnowledgeArticles' - List of all the arranged Knowledge Articles.
         **/
         saveSelectedCategories({
             list_SubcategoriesSelected: this.list_FinalSortedCategories,
@@ -421,6 +407,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             } else {
                 this.showToastMessage(CLDEL00001, result.strErrorMessage, 'error');
             }
+            refreshApex(this.wiredCategoryData);
         })
         .catch(error => {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
@@ -428,8 +415,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         .finally(() => {
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
-            refreshApex(this.wiredCategoryData);
-            this.blnIsLoading = false;
         });
     }
 
@@ -610,7 +595,6 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
         this.list_SelectedCategoryNames = this.list_selectedConfigurationNames;
         this.list_SelectedCategoryNamesBackup = this.list_selectedConfigurationNames;
         this.createTree(this.list_SelectedCategoryNames);
-        console.log(this.map_KnowledgeArticlesByCategoryMaster);
         this.map_knowledgeArticlesByCategory = JSON.parse(JSON.stringify(this.map_KnowledgeArticlesByCategoryMaster));
         this.map_knowledgeArticlesByCategory = this.filterKnowledgeArticles(
             this.strUserLanguage, 
