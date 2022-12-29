@@ -568,6 +568,8 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             idToNavigateArticle = filteredArticle[0]["Id"];
         }
         
+        sessionStorage.setItem("currentCategoryName", this.selectedTreeNode);
+
         if (idToNavigateArticle) {
             this[NavigationMixin.GenerateUrl]({
                 type: 'standard__recordPage',
