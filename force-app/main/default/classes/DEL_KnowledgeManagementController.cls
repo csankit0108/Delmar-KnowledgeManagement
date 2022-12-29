@@ -28,6 +28,8 @@ public with sharing class DEL_KnowledgeManagementController {
     **/
     public class KnowledgeWrapper {
         @AuraEnabled public Boolean blnIsSuccess;
+        @AuraEnabled public String strErrorMessage;
+
         //Map of List of sub categories by top level categories
         @AuraEnabled public Map<String, List<String>> map_CategoriesByTopLevelCategories = new Map<String, List<String>>();
         //This map defines what is the parent category for a sub category
@@ -46,9 +48,16 @@ public with sharing class DEL_KnowledgeManagementController {
         //Map all published Knowledge Articles based on Category Unique Name      
         @AuraEnabled public Map<String, List<Knowledge__kav>> map_KnowledgeArticlesByCategoryUniqueName = new Map<String, List<Knowledge__kav>>();
         //Map all Category Unique Name By it's Label Name
-        @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
+        @AuraEnabled public Map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
+        //Map all Knowledge Configuration for Articles with Knowledge Artile Id
+        @AuraEnabled public Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeArticleConfigByKnowledgeArticleId = new Map<String, DEL_KnowledgeConfiguration__c>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
+
+        public KnowledgeWrapper() {
+            this.blnIsSuccess = true;
+            this.strErrorMessage = '';
+        }
     }
 
     /**
@@ -70,6 +79,9 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ Author   :  Ankit CS
     **/
     public class TableofContentsWrapper {
+        @AuraEnabled public Boolean blnIsSuccess;
+        @AuraEnabled public String strErrorMessage;
+
         //This map defines what is the parent category for a sub category
         @AuraEnabled public Map<String, String> map_CategoryByParent = new Map<String, String>();
         @AuraEnabled public Map<String, List<Knowledge__kav>> map_ArticlesByCategoryName = new Map<String, List<Knowledge__kav>>();
@@ -81,6 +93,13 @@ public with sharing class DEL_KnowledgeManagementController {
         @AuraEnabled public map<String, String> map_CategoriesByUniqueName = new Map<String, String>();
         //Current Logged-In User information
         @AuraEnabled public User objUserInformation = new user();
+        //Map of Knowledge Configuration by Knowledge Article Id
+        @AuraEnabled public Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationByKnowledgeArticleId = new Map<String, DEL_KnowledgeConfiguration__c>();
+
+        public TableofContentsWrapper() {
+            this.blnIsSuccess = true;
+            this.strErrorMessage = '';
+        }
     }
 
     /**
@@ -89,11 +108,16 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ params       :  'map_categoryByParent'       - Map of each category and its immediate parent
     *                :  'list_SubcategoriesSelected' - List of slected subcategories from the component
     *                :  'strPageName'                - Name of the page
-    * @ return       :  'list_KnowledgeConfigurationsforUpsert' - List of newly added/updated configurations
+    * @ return       :  'list_AllArrangedArticles'   - List of All Sorted Articles
     **/
     @AuraEnabled
-    public static List<DEL_KnowledgeConfiguration__c> saveCategories(Map<String, String> map_CategoryByParent, List<Object> list_SubcategoriesSelected, String strPageName, List<Knowledge__kav> list_KnowledgeArticles) {
-        map_KnowledgeConfigurationsByName = new Map<String,DEL_KnowledgeConfiguration__c>();
+    public static KnowledgeWrapper saveCategories(
+        Map<String, String> map_CategoryByParent, 
+        List<Object> list_SubcategoriesSelected, 
+        String strPageName, 
+        Map<String, List<Knowledge__kav>> map_knowledgeArticlesByCategory
+    ) {
+        map_KnowledgeConfigurationsByName = new Map<String, DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpsert = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforUpdate = new List<DEL_KnowledgeConfiguration__c>();
         List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurationsforInsert = new List<DEL_KnowledgeConfiguration__c>();
@@ -101,21 +125,34 @@ public with sharing class DEL_KnowledgeManagementController {
         List<DEL_KnowledgeConfiguration__c> list_ConfigurationsToDelete = new List<DEL_KnowledgeConfiguration__c>();
         //List of subcategories to be removed from the configs
         List<DEL_KnowledgeConfiguration__c> list_ConfigurationsForDeletion = new List<DEL_KnowledgeConfiguration__c>();
+        //Set of existing and newly added  article configuration keys (Article Configuration Name + Knowledge Article  Id)
+        Set<String> set_KnowledgeConfigurationKeys = new Set<String>();
+        //List of article configs to be deleted
+        List<DEL_KnowledgeConfiguration__c> list_ArticleconfigurationsToDelete = new List<DEL_KnowledgeConfiguration__c>();
         //List of  errors from all the DML operations
         List<String> list_ConsolidatedDMLErrors =new List<String>();
+        Map<String, DEL_KnowledgeConfiguration__c> map_KnowledgeConfigurationByKnowledgeArticleId = new Map<String, DEL_KnowledgeConfiguration__c>();
+        KnowledgeWrapper objKnowledgeWrapper = new KnowledgeWrapper();
 
         try {
             for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : [SELECT 
                                                                             Id,
                                                                             Name,
                                                                             ParentCategory__c,
+                                                                            Type__c, 
+                                                                            KnowledgeArticleId__c, 
                                                                             SortOrder__c
                                                                             FROM 
                                                                             DEL_KnowledgeConfiguration__c
                                                                             WHERE PageName__c = :strPageName 
+                                                                            OR Type__c = 'Knowledge Article'
                                                                             ]
             ) {
-                map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
+                if (objKnowledgeConfiguration.Type__c == 'Knowledge Article') {
+                    map_KnowledgeConfigurationByKnowledgeArticleId.put(objKnowledgeConfiguration.Name + objKnowledgeConfiguration.KnowledgeArticleId__c, objKnowledgeConfiguration);
+                } else {
+                    map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
+                }
             }
             
             for (Object strsubCategory : list_SubcategoriesSelected) {
@@ -126,18 +163,20 @@ public with sharing class DEL_KnowledgeManagementController {
                     objKnowledgeConfiguration = map_KnowledgeConfigurationsByName.get(objWrapper.name);
                     objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
                     objKnowledgeConfiguration.PageName__c = strPageName;
+                    objKnowledgeConfiguration.Type__c = 'Data Category';
                     list_KnowledgeConfigurationsforUpdate.add(objKnowledgeConfiguration);
                 } else {
                     objKnowledgeConfiguration.Name = objWrapper.name;
                     objKnowledgeConfiguration.SortOrder__c = Integer.valueOf(objWrapper.SortOrder);
                     objKnowledgeConfiguration.PageName__c = strPageName;
+                    objKnowledgeConfiguration.Type__c = 'Data Category';
                     list_KnowledgeConfigurationsforInsert.add(objKnowledgeConfiguration);
                 }
             }
 
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforInsert);
             list_KnowledgeConfigurationsforUpsert.addAll(list_KnowledgeConfigurationsforUpdate);
-            for (String strCategory : map_KnowledgeConfigurationsByName.keySet())  {
+            for (String strCategory : map_KnowledgeConfigurationsByName.keySet()) {
                 if(list_KnowledgeConfigurationsforUpdate.contains(map_KnowledgeConfigurationsByName.get(strCategory))) {
                     continue;
                 } else {
@@ -145,12 +184,47 @@ public with sharing class DEL_KnowledgeManagementController {
                 }
             }
 
-            if (!list_KnowledgeArticles.isEmpty()) {
-                setknowledgeArticlesOrder(list_KnowledgeArticles);
+            if (!map_knowledgeArticlesByCategory.isEmpty()) {
+                List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = new List<DEL_KnowledgeConfiguration__c>();
+                for (String strCategory : map_knowledgeArticlesByCategory.keySet()) {
+                    for (Integer intIndex = 0; intIndex < map_knowledgeArticlesByCategory.get(strCategory).size(); intIndex++) {
+                        if (map_KnowledgeConfigurationByKnowledgeArticleId.containsKey(strCategory + map_knowledgeArticlesByCategory.get(strCategory)[intIndex].KnowledgeArticleId)) {
+                            map_KnowledgeConfigurationByKnowledgeArticleId.get(strCategory + map_knowledgeArticlesByCategory.get(strCategory)[intIndex].KnowledgeArticleId).SortOrder__c = intIndex + 1;
+                            set_KnowledgeConfigurationKeys.add(strCategory + map_knowledgeArticlesByCategory.get(strCategory)[intIndex].KnowledgeArticleId);
+                        } else {
+                            DEL_KnowledgeConfiguration__c objKnowledgeConfiguration = new DEL_KnowledgeConfiguration__c(
+                                KnowledgeArticleId__c = map_knowledgeArticlesByCategory.get(strCategory)[intIndex].KnowledgeArticleId,
+                                Type__c = 'Knowledge Article',
+                                SortOrder__c = intIndex + 1,
+                                Name = strCategory
+                            );
+                            set_KnowledgeConfigurationKeys.add(strCategory + objKnowledgeConfiguration.KnowledgeArticleId__c);
+                            map_KnowledgeConfigurationByKnowledgeArticleId.put(strCategory + objKnowledgeConfiguration.KnowledgeArticleId__c, objKnowledgeConfiguration);
+                        }
+                    }
+                }
             }
 
-            List<Database.UpsertResult> list_UpsertResults = Database.upsert(list_KnowledgeConfigurationsforUpsert, false);
-            list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_UpsertResults, 'Upsert'));
+            if (strPageName == 'Admin_Setup') {
+                for (String strKnowledgeConfigurationKey : map_KnowledgeConfigurationByKnowledgeArticleId.keySet()) {
+                    if (!set_KnowledgeConfigurationKeys.contains(strKnowledgeConfigurationKey)) {
+                        list_ArticleconfigurationsToDelete.add(map_KnowledgeConfigurationByKnowledgeArticleId.get(strKnowledgeConfigurationKey));
+                    }
+                }
+            }
+
+            List<Database.UpsertResult> list_UpsertResults = new List<Database.UpsertResult>();
+            if (!list_KnowledgeConfigurationsforUpsert.isEmpty()) {
+                list_UpsertResults.addAll(Database.upsert(list_KnowledgeConfigurationsforUpsert, false));
+            }
+
+            if (!map_KnowledgeConfigurationByKnowledgeArticleId.values().isEmpty() && strPageName == 'Admin_Setup') {
+                list_UpsertResults.AddAll(Database.upsert(map_KnowledgeConfigurationByKnowledgeArticleId.values(), false));
+            }
+            
+            if (!list_UpsertResults.isEmpty()) {
+                list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_UpsertResults, 'Upsert'));
+            }
 
             for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration : list_KnowledgeConfigurationsforUpsert) {
                 map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
@@ -168,7 +242,9 @@ public with sharing class DEL_KnowledgeManagementController {
 
             //Fetch and delete the categories and their inner subcategories
             fetchChildCategories(list_ConfigurationsForDeletion, map_KnowledgeConfigurationsByName, list_ConfigurationsToDelete);
-
+            if (!list_ArticleconfigurationsToDelete.isEmpty() && strPageName == 'Admin_Setup') {
+                list_ConfigurationsToDelete.addAll(list_ArticleconfigurationsToDelete);
+            }
             List<Database.DeleteResult> list_DeleteResults = Database.delete(list_ConfigurationsToDelete, true);
             list_ConsolidatedDMLErrors.addAll(DEL_Utils.processDMLErrors(list_DeleteResults, 'Delete'));
             
@@ -180,8 +256,6 @@ public with sharing class DEL_KnowledgeManagementController {
                 );
             }
 
-            return list_KnowledgeConfigurationsforUpsert;
-
         } catch (Exception objException) {
             DEL_Utils.logException(
                 'DEL_KnowledgeManagementController',
@@ -189,25 +263,10 @@ public with sharing class DEL_KnowledgeManagementController {
                 objException,
                 true
             );
-            return list_KnowledgeConfigurationsforUpsert; 
+            objKnowledgeWrapper.blnIsSuccess = false;
+            objKnowledgeWrapper.strErrorMessage = objException.getMessage();
         }
-    }
-
-    @AuraEnabled(cacheable = true)
-    public static List<DEL_KnowledgeConfiguration__c> getSelectedCategories(String strPageName) {
-        List<DEL_KnowledgeConfiguration__c> list_SelectedCategories = [SELECT
-                                                                       Id,
-                                                                       Name,
-                                                                       ParentCategory__c,
-                                                                       SortOrder__c,
-                                                                       PageName__c
-                                                                       FROM 
-                                                                       DEL_KnowledgeConfiguration__c
-                                                                       WHERE 
-                                                                       PageName__c = 'Admin_Setup' OR
-                                                                       PageName__c = :strPageName
-                                                                       ORDER By SortOrder__c];
-        return list_SelectedCategories;
+        return objKnowledgeWrapper;
     }
     
     /**
@@ -234,30 +293,37 @@ public with sharing class DEL_KnowledgeManagementController {
                                                                                 Name,
                                                                                 ParentCategory__c,
                                                                                 PageName__c,
+                                                                                Type__c, 
+                                                                                KnowledgeArticleId__c, 
                                                                                 SortOrder__c
                                                                                 FROM 
                                                                                 DEL_KnowledgeConfiguration__c
                                                                                 WHERE PageName__c = 'Admin_Setup'
-                                                                                OR PageName__c = :strPageName
+                                                                                OR PageName__c = :strPageName 
+                                                                                OR Type__c = 'Knowledge Article'
                                                                                 ORDER BY SortOrder__c ASC
                                                                                 ]
                 ) {
-                    map_ConfigsByName.put(objKnowledgeConfiguration.Name+objKnowledgeConfiguration.PageName__c, objKnowledgeConfiguration);
-                    if (objKnowledgeConfiguration.PageName__c == 'Admin_Setup') {
-                        if (!map_ConfigsByPageName.containsKey('Admin_Setup')) {
-                            map_ConfigsByPageName.put('Admin_Setup', new List<String> { objKnowledgeConfiguration.Name });
-                        } else {
-                            map_ConfigsByPageName.get('Admin_Setup').add(objKnowledgeConfiguration.Name);
-                        }
-                    } else if (
-                        String.isNotBlank(objKnowledgeConfiguration.PageName__c) &&
-                        String.isNotBlank(strPageName) &&
-                        strPageName == objKnowledgeConfiguration.PageName__c
-                    ) {
-                        if (!map_ConfigsByPageName.containsKey(strPageName)) {
-                            map_ConfigsByPageName.put(strPageName, new List<String> { objKnowledgeConfiguration.Name });
-                        } else {
-                            map_ConfigsByPageName.get(strPageName).add(objKnowledgeConfiguration.Name);
+                    if(objKnowledgeConfiguration.Type__c == 'Knowledge Article') {
+                        objWrapper.map_KnowledgeConfigurationByKnowledgeArticleId.put(objKnowledgeConfiguration.Name + objKnowledgeConfiguration.KnowledgeArticleId__c, objKnowledgeConfiguration);
+                    } else {
+                        map_ConfigsByName.put(objKnowledgeConfiguration.Name+objKnowledgeConfiguration.PageName__c, objKnowledgeConfiguration);
+                        if (objKnowledgeConfiguration.PageName__c == 'Admin_Setup') {
+                            if (!map_ConfigsByPageName.containsKey('Admin_Setup')) {
+                                map_ConfigsByPageName.put('Admin_Setup', new List<String> { objKnowledgeConfiguration.Name });
+                            } else {
+                                map_ConfigsByPageName.get('Admin_Setup').add(objKnowledgeConfiguration.Name);
+                            }
+                        } else if (
+                            String.isNotBlank(objKnowledgeConfiguration.PageName__c) &&
+                            String.isNotBlank(strPageName) &&
+                            strPageName == objKnowledgeConfiguration.PageName__c
+                        ) {
+                            if (!map_ConfigsByPageName.containsKey(strPageName)) {
+                                map_ConfigsByPageName.put(strPageName, new List<String> { objKnowledgeConfiguration.Name });
+                            } else {
+                                map_ConfigsByPageName.get(strPageName).add(objKnowledgeConfiguration.Name);
+                            }
                         }
                     }
                 }
@@ -368,7 +434,7 @@ public with sharing class DEL_KnowledgeManagementController {
                 objWrapper.map_CategoriesByUniqueName = map_CategoriesByUniqueName;
                 Id idUserId = UserInfo.getUserId();
                 objWrapper.objUserInformation = getCurrentUserDetails(idUserId);
-                return objWrapper;
+                
             } catch(Exception objException) {
                 DEL_Utils.logException(
                     'DEL_KnowledgeManagementController',
@@ -376,8 +442,10 @@ public with sharing class DEL_KnowledgeManagementController {
                     objException,
                     true
                 );
-                return objWrapper;
+                objWrapper.blnIsSuccess = false;
+                objWrapper.strErrorMessage = objException.getMessage();
             }
+            return objWrapper;
     }
 
     /**
@@ -402,15 +470,22 @@ public with sharing class DEL_KnowledgeManagementController {
                                                                                 Name,
                                                                                 ParentCategory__c,
                                                                                 PageName__c,
-                                                                                SortOrder__c
-                                                                                FROM 
-                                                                                DEL_KnowledgeConfiguration__c
+                                                                                SortOrder__c, 
+                                                                                KnowledgeArticleId__c,
+                                                                                Type__c
+                                                                                FROM DEL_KnowledgeConfiguration__c
                                                                                 WHERE PageName__c = 'Admin_Setup'
-                                                                                ORDER BY SortOrder__c ASC
-                                                                                ]
+                                                                                OR Type__c= 'Knowledge Article'
+                                                                                ORDER BY SortOrder__c ASC]
                 ) {
-                    map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
-                    objWrapper.list_DefaultSortedCategories.add(objKnowledgeConfiguration.Name);
+                    if (!String.isNotBlank(objKnowledgeConfiguration.Type__c) ||
+                        objKnowledgeConfiguration.Type__c != 'Knowledge Article'
+                    ) {
+                        map_KnowledgeConfigurationsByName.put(objKnowledgeConfiguration.Name, objKnowledgeConfiguration);
+                        objWrapper.list_DefaultSortedCategories.add(objKnowledgeConfiguration.Name);
+                    } else if (String.isNotBlank(objKnowledgeConfiguration.KnowledgeArticleId__c)) {
+                        objWrapper.map_KnowledgeArticleConfigByKnowledgeArticleId.put(objKnowledgeConfiguration.Name + objKnowledgeConfiguration.KnowledgeArticleId__c, objKnowledgeConfiguration);
+                    }
                 }
 
                 //Making the call to the describeDataCategoryGroups to
@@ -515,7 +590,8 @@ public with sharing class DEL_KnowledgeManagementController {
                     objException,
                     true
                 );
-                return objWrapper;
+                objWrapper.blnIsSuccess = false;
+                objWrapper.strErrorMessage = objException.getMessage();
             }
             return objWrapper;
         }
@@ -596,9 +672,10 @@ public with sharing class DEL_KnowledgeManagementController {
     * @ return       :  'map_KnowledgeArticlesByCategoryName' - Map of all the Knowledge Articles by Category Unique Name.
     **/
     @AuraEnabled(cacheable=true)
-    public static Map<String, List<Knowledge__kav>> getAllKnowledgeArticles () { 
+    public static Map<String, List<Knowledge__kav>> getAllKnowledgeArticles() { 
         List<Knowledge__DataCategorySelection> list_KnowledgeArticlesWithCategory = new List<Knowledge__DataCategorySelection>();
-        Map<Id, String> map_KnowledgeArticleIdByCategoryName = new Map<Id, String>();
+        //Map of List of Category Names by KnowledgeVersion Id
+        Map<Id, List<String>> map_CategoryNamesByKnowledgeVersionId = new Map<Id, List<String>>();
         Map<String, List<Knowledge__kav>> map_KnowledgeArticlesByCategoryName = new Map<String, List<Knowledge__kav>>();
         Map<Id, Id> map_KnowledgeRecordIdByKnowledgeArticleId = new Map<Id, Id>();
 
@@ -609,27 +686,32 @@ public with sharing class DEL_KnowledgeManagementController {
                                               DataCategoryName 
                                               FROM Knowledge__DataCategorySelection];
         for (Knowledge__DataCategorySelection objKnowledgeCategory : list_KnowledgeArticlesWithCategory) {
-            map_KnowledgeArticleIdByCategoryName.put(objKnowledgeCategory.ParentId, objKnowledgeCategory.DataCategoryName);
+            if (map_CategoryNamesByKnowledgeVersionId.containsKey(objKnowledgeCategory.ParentId)) {
+                map_CategoryNamesByKnowledgeVersionId.get(objKnowledgeCategory.ParentId).add(objKnowledgeCategory.DataCategoryName);
+            } else {
+                map_CategoryNamesByKnowledgeVersionId.put(
+                    objKnowledgeCategory.ParentId, 
+                    new List<String> { objKnowledgeCategory.DataCategoryName }
+                );
+            }
         }
 
         List<Knowledge__kav> list_KnowledgeArticles = [SELECT Id, 
-                                                       KnowledgeArticleId, 
-                                                       SortOrder__c, 
+                                                       KnowledgeArticleId,
                                                        Title, 
                                                        PublishStatus, 
                                                        VersionNumber 
                                                        FROM Knowledge__kav
-                                                       WHERE Id IN :map_KnowledgeArticleIdByCategoryName.keySet()
+                                                       WHERE Id IN :map_CategoryNamesByKnowledgeVersionId.keySet()
                                                        AND PublishStatus = 'Online'
-                                                       ORDER BY SortOrder__c];
+                                                       ];
         for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
             map_KnowledgeRecordIdByKnowledgeArticleId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle.Id);
         }
 
         List<Knowledge__kav> list_KnowledgeArticlesNew = [SELECT 
                                                           Id, 
-                                                          KnowledgeArticleId, 
-                                                          SortOrder__c, 
+                                                          KnowledgeArticleId,
                                                           Title, 
                                                           PublishStatus, 
                                                           VersionNumber, 
@@ -638,94 +720,20 @@ public with sharing class DEL_KnowledgeManagementController {
                                                           FROM Knowledge__kav
                                                           WHERE KnowledgeArticleId IN :map_KnowledgeRecordIdByKnowledgeArticleId.keySet()
                                                           AND PublishStatus = 'Online'
-                                                          ORDER BY SortOrder__c];
+                                                          ];
 
         for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticlesNew) {
-            String strCategoryName = map_KnowledgeArticleIdByCategoryName.get(map_KnowledgeRecordIdByKnowledgeArticleId.get(objKnowledgeArticle.KnowledgeArticleId));
-            if (!map_KnowledgeArticlesByCategoryName.containsKey(strCategoryName)) {
-                map_KnowledgeArticlesByCategoryName.put(strCategoryName, new List<Knowledge__kav>{ objKnowledgeArticle });
-            } else {
-                map_KnowledgeArticlesByCategoryName.get(strCategoryName).add(objKnowledgeArticle);
+            if (map_CategoryNamesByKnowledgeVersionId.containsKey(map_KnowledgeRecordIdByKnowledgeArticleId.get(objKnowledgeArticle.KnowledgeArticleId))) {
+                for (String strCategoryName : map_CategoryNamesByKnowledgeVersionId.get(map_KnowledgeRecordIdByKnowledgeArticleId.get(objKnowledgeArticle.KnowledgeArticleId))) {
+                    if (!map_KnowledgeArticlesByCategoryName.containsKey(strCategoryName)) {
+                        map_KnowledgeArticlesByCategoryName.put(strCategoryName, new List<Knowledge__kav>{ objKnowledgeArticle });
+                    } else {
+                        map_KnowledgeArticlesByCategoryName.get(strCategoryName).add(objKnowledgeArticle);
+                    }
+                }
             }
         }
         return map_KnowledgeArticlesByCategoryName;
-    }
-
-    /**
-    * @ author       :  Vinay kant
-    * @ description  :  This method set the 'SortOrder__c' field for the Knowledge Articles to store it in sorted order.
-    * @ params       :  'list_KnowledgeArticles' - list of Knowledge Articles
-    **/
-    @AuraEnabled
-    public static void setknowledgeArticlesOrder(List<Knowledge__kav> list_KnowledgeArticles) {
-        Map<Id, Knowledge__kav> map_KnowledgeArticleByKnowledgeId = new Map<Id, Knowledge__kav>();
-        List<Id> list_DraftArticleIds = new List<Id>();
-        List<Id> list_KnowledgeArticlesIds = new List<Id>();
-        List<Knowledge__kav> list_DraftKnowledgeArticles = new List<Knowledge__kav>();
-        
-        try {
-            if (list_KnowledgeArticles.size() > 0) {
-                for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticles) {
-                    map_KnowledgeArticleByKnowledgeId.put(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle);
-                }
-                List<Knowledge__kav> list_KnowledgeArticlesNew = [SELECT 
-                                                                  Id, 
-                                                                  KnowledgeArticleId, 
-                                                                  SortOrder__c, 
-                                                                  Title, 
-                                                                  PublishStatus, 
-                                                                  VersionNumber, 
-                                                                  Language, 
-                                                                  IsMasterLanguage
-                                                                  FROM Knowledge__kav
-                                                                  WHERE KnowledgeArticleId IN :map_KnowledgeArticleByKnowledgeId.keySet()
-                                                                  AND PublishStatus = 'Online'];
-
-                for (Knowledge__kav objKnowledgeArticle : list_KnowledgeArticlesNew) {
-                    Id idDraftArticle;
-                    if (!objKnowledgeArticle.IsMasterLanguage) {
-                        idDraftArticle = KbManagement.PublishingService.editPublishedTranslation(objKnowledgeArticle.KnowledgeArticleId, objKnowledgeArticle.Language, false);
-                    } else {
-                        idDraftArticle = KbManagement.PublishingService.editOnlineArticle(objKnowledgeArticle.KnowledgeArticleId, false);
-                    }
-                    list_DraftArticleIds.add(idDraftArticle);
-                }
-
-                list_DraftKnowledgeArticles = [SELECT 
-                                               Id,
-                                               KnowledgeArticleId, 
-                                               VersionNumber, 
-                                               Language,
-                                               IsMasterLanguage
-                                               FROM Knowledge__kav
-                                               WHERE Id IN :list_DraftArticleIds];
-                for (Knowledge__kav objDraftKnowledgeArticle : list_DraftKnowledgeArticles) {
-                    objDraftKnowledgeArticle.SortOrder__c = map_KnowledgeArticleByKnowledgeId.get(objDraftKnowledgeArticle.KnowledgeArticleId).SortOrder__c;
-                }
-
-                if (list_DraftKnowledgeArticles.size() > 0) {
-                    update list_DraftKnowledgeArticles;
-                }
-                
-                for (Knowledge__kav objKnowledgeArticle : list_DraftKnowledgeArticles) {
-                    if (!objKnowledgeArticle.IsMasterLanguage) {
-                        Id idNewUpdatedArticle = objKnowledgeArticle.Id;
-                        KbManagement.PublishingService.completeTranslation(idNewUpdatedArticle);
-                    } else {
-                        Id idNewUpdatedArticle = objKnowledgeArticle.KnowledgeArticleId;
-                        KbManagement.PublishingService.publishArticle(idNewUpdatedArticle, false);
-                    }
-                }
-            }
-        } catch (Exception objException) {
-            DEL_Utils.logException(
-                'DEL_KnowledgeManagementController',
-                'setknowledgeArticlesOrder',
-                objException,
-                true
-            );
-            throw new AuraHandledException(objException.getMessage());
-        }
     }
 
     /**
@@ -733,76 +741,131 @@ public with sharing class DEL_KnowledgeManagementController {
      * @ description   : This apex method is used differentiate previous knowledge article and next knowledge article by Sort Order
      *                   and returns Sorted Knowledge Articles.
      * @params         : 'recordId' - Id of the Knowledge Articles.
+     *                 : 'strCategoryName' - This parameter stores Category Unique Name.
      * @ return        : 'articles'  - Map of 'Next' or 'Previous' or 'Both' knowledge article corresponding to the current knowledge articles.
      **/
     @AuraEnabled(cacheable = true)
-    public static Map<String, Knowledge__kav> DEL_Nxtprev (Id recordId) {
-        Knowledge__kav objKnowledgeArticle = [SELECT 
-                                              Id, 
-                                              Title, 
-                                              KnowledgeArticleId, 
-                                              PublishStatus, 
-                                              VersionNumber, 
-                                              SortOrder__c,
-                                              Language,
-                                              IsMasterLanguage
-                                              FROM Knowledge__kav 
-                                              WHERE PublishStatus = 'Online' 
-                                              AND Id = :recordId];
-
-        Knowledge__kav objKnowledgeArticleMasterLanguage = [SELECT 
-                                                            Id, 
-                                                            Title, 
-                                                            KnowledgeArticleId
-                                                            FROM Knowledge__kav 
-                                                            WHERE PublishStatus = 'Online' 
-                                                            AND KnowledgeArticleId = :objKnowledgeArticle.KnowledgeArticleId
-                                                            AND IsMasterLanguage = true 
-                                                            LIMIT 1];
-
-        Knowledge__DataCategorySelection objDataCategory = [SELECT 
-                                                            Id, 
-                                                            DataCategoryGroupName, 
-                                                            DataCategoryName 
-                                                            FROM Knowledge__DataCategorySelection 
-                                                            WHERE ParentId = :objKnowledgeArticleMasterLanguage.Id];
-
-        String groupName = objDataCategory.DataCategoryGroupName + '__c';
-        String subCategory = objDataCategory.DataCategoryName + '__c';
-        String strQuery = 'SELECT Id, Title, KnowledgeArticleId, PublishStatus, VersionNumber, IsMasterLanguage, Language, SortOrder__c FROM Knowledge__kav WHERE PublishStatus=\'Online\' WITH DATA CATEGORY '+groupName +' AT '+subCategory +' ORDER BY SortOrder__c';
-        List<Knowledge__kav> filteredArticles = Database.query(strQuery);
-
+    public static Map<String, Knowledge__kav> getNextAndPreviousArticles (Id recordId, String strCategoryName) {
+        Id idNextKnowledgeArticleId, idPreviousKnowledgeArticleId;
+        Id idKnowledgeArticleId, idMasterArticleId;
+        Id idUserId = UserInfo.getUserId();
+        User objLoggedInUser = getCurrentUserDetails(idUserId);
+        List<Knowledge__DataCategorySelection> list_DataCategorySelection = new List<Knowledge__DataCategorySelection>();
+        Map<Id, DEL_KnowledgeConfiguration__c> map_KnowledgeArticleConfigurationByKnowledgeArticleId = 
+            new Map<Id, DEL_KnowledgeConfiguration__c>();
+        Map<Id, List<Knowledge__kav>> map_KnowledgeArticlesByKnowledgeArticleId = new Map<Id, List<Knowledge__kav>>();
         Map<String, Knowledge__kav> map_articlesByNextPrevious = new Map<String, Knowledge__kav>();
         
-        for (Knowledge__kav objKnowledgeArticleFiltered: filteredArticles) {
-            if (String.isNotBlank(String.valueOf(objKnowledgeArticleFiltered.SortOrder__c)) &&
-                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) 
-            ) {
-                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1) &&
-                    objKnowledgeArticleFiltered.IsMasterLanguage
-                ) {
-                    map_articlesByNextPrevious.put('previous', objKnowledgeArticleFiltered);
-                }
-                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1) &&
-                    objKnowledgeArticleFiltered.IsMasterLanguage
-                ) {
-                    map_articlesByNextPrevious.put('next', objKnowledgeArticleFiltered);
+        Map<Id, Knowledge__kav> map_knowledgeArticleByArticleId = new Map<Id, Knowledge__kav>([SELECT 
+                                                                                               Id, 
+                                                                                               Title, 
+                                                                                               KnowledgeArticleId, 
+                                                                                               PublishStatus, 
+                                                                                               VersionNumber, 
+                                                                                               Language,
+                                                                                               IsMasterLanguage
+                                                                                               FROM Knowledge__kav 
+                                                                                               WHERE PublishStatus = 'Online'
+                                                                                               ]);
+        
+        if (map_knowledgeArticleByArticleId.containsKey(recordId)) {
+            idKnowledgeArticleId = map_knowledgeArticleByArticleId.get(recordId).KnowledgeArticleId;
+        }
+        for (Knowledge__kav objKnowledgeArticle : map_knowledgeArticleByArticleId.values()) {
+            if (!map_KnowledgeArticlesByKnowledgeArticleId.containsKey(objKnowledgeArticle.KnowledgeArticleId)) {
+                map_KnowledgeArticlesByKnowledgeArticleId.put(objKnowledgeArticle.KnowledgeArticleId, new List<Knowledge__kav>{ objKnowledgeArticle });
+            } else {
+                map_KnowledgeArticlesByKnowledgeArticleId.get(objKnowledgeArticle.KnowledgeArticleId).add(objKnowledgeArticle);
+            }
+            if (objKnowledgeArticle.KnowledgeArticleId == idKnowledgeArticleId && objKnowledgeArticle.IsMasterLanguage) {
+                idMasterArticleId = objKnowledgeArticle.Id;
+            }
+        }
+
+        if (String.isNotBlank(idMasterArticleId)) {
+            list_DataCategorySelection = [SELECT 
+                                          Id, 
+                                          DataCategoryGroupName, 
+                                          DataCategoryName 
+                                          FROM Knowledge__DataCategorySelection 
+                                          WHERE ParentId = :idMasterArticleId
+                                          ORDER BY CreatedDate DESC];
+        }
+
+        Set<String> set_ValidCategoryNames = new Set<String>();
+        Boolean blnFlag = true;
+        Knowledge__DataCategorySelection objLatestDataCategorySelection = new Knowledge__DataCategorySelection();
+        if (!list_DataCategorySelection.isEmpty()) {
+            for (Knowledge__DataCategorySelection objDataCategorySelection: list_DataCategorySelection) {
+                set_ValidCategoryNames.add(objDataCategorySelection.DataCategoryGroupName);
+                set_ValidCategoryNames.add(objDataCategorySelection.DataCategoryName);
+                if (blnFlag) {
+                    objLatestDataCategorySelection = objDataCategorySelection;
+                    blnFlag = false;
                 }
             }
         }
-        for (Knowledge__kav objKnowledgeArticleFiltered: filteredArticles) {
-            if (String.isNotBlank(String.valueOf(objKnowledgeArticleFiltered.SortOrder__c)) &&
-                String.isNotBlank(String.valueOf(objKnowledgeArticle.SortOrder__c)) 
-            ) {
-                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c-1) &&
-                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+
+        if (String.isBlank(strCategoryName) || (String.isNotBlank(strCategoryName) && !set_ValidCategoryNames.contains(strCategoryName))) {
+            strCategoryName = objLatestDataCategorySelection.DataCategoryName;
+        }
+        
+        List<DEL_KnowledgeConfiguration__c> list_knowledgeArticleConfiguration = [SELECT 
+                                                                                  Id,
+                                                                                  Name, 
+                                                                                  KnowledgeArticleId__c, 
+                                                                                  SortOrder__c, 
+                                                                                  Type__c 
+                                                                                  FROM DEL_KnowledgeConfiguration__c
+                                                                                  WHERE Type__c = 'Knowledge Article'
+                                                                                  AND Name = :strCategoryName];
+        
+        for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration: list_knowledgeArticleConfiguration) {
+            map_KnowledgeArticleConfigurationByKnowledgeArticleId.put(objKnowledgeConfiguration.KnowledgeArticleId__c, objKnowledgeConfiguration);
+        }
+
+        if (String.isNotBlank(strCategoryName) && String.isNotBlank(idKnowledgeArticleId)) {
+            for (DEL_KnowledgeConfiguration__c objKnowledgeConfiguration: list_knowledgeArticleConfiguration) {
+                if (strCategoryName == objKnowledgeConfiguration.Name && 
+                    String.isNotBlank(String.valueOf(objKnowledgeConfiguration.SortOrder__c)) && 
+                    String.isNotBlank(String.valueOf(map_KnowledgeArticleConfigurationByKnowledgeArticleId.get(idKnowledgeArticleId).SortOrder__c)) &&
+                    objKnowledgeConfiguration.SortOrder__c == map_KnowledgeArticleConfigurationByKnowledgeArticleId.get(idKnowledgeArticleId).SortOrder__c-1
                 ) {
-                    map_articlesByNextPrevious.put('previous', objKnowledgeArticleFiltered);
+                    idPreviousKnowledgeArticleId = objKnowledgeConfiguration.KnowledgeArticleId__c;
                 }
-                if (objKnowledgeArticleFiltered.SortOrder__c == (objKnowledgeArticle.SortOrder__c+1) &&
-                    objKnowledgeArticleFiltered.Language == objKnowledgeArticle.Language
+                if (strCategoryName == objKnowledgeConfiguration.Name && 
+                String.isNotBlank(String.valueOf(objKnowledgeConfiguration.SortOrder__c)) && 
+                String.isNotBlank(String.valueOf(map_KnowledgeArticleConfigurationByKnowledgeArticleId.get(idKnowledgeArticleId).SortOrder__c)) &&
+                objKnowledgeConfiguration.SortOrder__c == map_KnowledgeArticleConfigurationByKnowledgeArticleId.get(idKnowledgeArticleId).SortOrder__c+1
                 ) {
-                    map_articlesByNextPrevious.put('next', objKnowledgeArticleFiltered);
+                    idNextKnowledgeArticleId = objKnowledgeConfiguration.KnowledgeArticleId__c;
+                }
+            }
+
+            if (String.isNotBlank(idNextKnowledgeArticleId) && 
+                map_KnowledgeArticlesByKnowledgeArticleId.containsKey(idNextKnowledgeArticleId)
+            ) {
+                List<Knowledge__kav> list_KnowledgeArticles = map_KnowledgeArticlesByKnowledgeArticleId.get(idNextKnowledgeArticleId);
+                for (Knowledge__kav objKnowledgeArticle: list_KnowledgeArticles) {
+                    if (objKnowledgeArticle.IsMasterLanguage) {
+                        map_articlesByNextPrevious.put('next', objKnowledgeArticle);
+                    } else if (objKnowledgeArticle.Language == objLoggedInUser.LanguageLocaleKey) {
+                        map_articlesByNextPrevious.put('next', objKnowledgeArticle);
+                        break;
+                    }
+                }
+            }
+            if (String.isNotBlank(idPreviousKnowledgeArticleId) && 
+                map_KnowledgeArticlesByKnowledgeArticleId.containsKey(idPreviousKnowledgeArticleId)
+            ) {
+                List<Knowledge__kav> list_KnowledgeArticles = map_KnowledgeArticlesByKnowledgeArticleId.get(idPreviousKnowledgeArticleId);
+                for (Knowledge__kav objKnowledgeArticle: list_KnowledgeArticles) {
+                    if (objKnowledgeArticle.IsMasterLanguage) {
+                        map_articlesByNextPrevious.put('previous', objKnowledgeArticle);
+                    } else if (objKnowledgeArticle.Language == objLoggedInUser.LanguageLocaleKey) {
+                        map_articlesByNextPrevious.put('previous', objKnowledgeArticle);
+                        break;
+                    }
                 }
             }
         }

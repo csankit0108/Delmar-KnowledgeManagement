@@ -1,7 +1,7 @@
-import { LightningElement,api,track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import DEL_Nxtprev from '@salesforce/apex/DEL_KnowledgeManagementController.DEL_Nxtprev';
+import getNextAndPreviousArticles from '@salesforce/apex/DEL_KnowledgeManagementController.getNextAndPreviousArticles';
 import getCurrentUserDetails from '@salesforce/apex/DEL_KnowledgeManagementController.getCurrentUserDetails';
 import idUserId from '@salesforce/user/Id';
 
@@ -60,11 +60,11 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
 
         /**
          * @ author        : G Nanda Kishore Reddy 
-         * @ description   : This Method 'DEL_Nxtprev' from Class 'DEL_NxtprevController' is used to retrive the recordId
+         * @ description   : This Method 'getNextAndPreviousArticles' from Class 'DEL_KnowledgeManagementController' is used to retrive the recordId
          *                   and make blnNext,blnPrevious true based on the key value.
          * @ params        : 'recordId' - Id of the Knowledge Articles.
         **/
-        DEL_Nxtprev({ recordId : this.recordId })
+        getNextAndPreviousArticles({ recordId : this.recordId, strCategoryName : sessionStorage.getItem("currentCategoryName") })
         .then(result => {
             this.objNextPrevious = JSON.parse(JSON.stringify(result));
             if (!this.objNextPrevious.hasOwnProperty('next')) {
@@ -78,7 +78,7 @@ export default class Del_knowledgeFooterComponent extends NavigationMixin(Lightn
         })
         .catch(error => {
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
-        })
+        });
     }
 
     /**

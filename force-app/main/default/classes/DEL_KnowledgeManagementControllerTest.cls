@@ -104,14 +104,15 @@ public class DEL_KnowledgeManagementControllerTest {
         objNewCategoryWrapper.name = 'Bookings';
         objNewCategoryWrapper.SortOrder = '2';
         list_CategoryWrapper.add(objNewCategoryWrapper);
-        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(
-                                                                            objWrapper.map_CategoryByParent, 
-                                                                            list_CategoryWrapper, 
-                                                                            'Admin_Setup', 
-                                                                            map_AllKnowledgeArticlesByCategory.get('Client_Bookings')
-                                                                            );
+        DEL_KnowledgeManagementController.KnowledgeWrapper objKnowledgeWrapper = DEL_KnowledgeManagementController.saveCategories(
+                                                                                    objWrapper.map_CategoryByParent, 
+                                                                                    list_CategoryWrapper, 
+                                                                                    'Admin_Setup', 
+                                                                                    map_AllKnowledgeArticlesByCategory
+                                                                                    );
         Test.stopTest();
-        System.assertEquals(5, list_KnowledgeConfigurations.size(), 'Category not added!');
+
+        System.assert(objKnowledgeWrapper.blnIsSuccess, objKnowledgeWrapper.strErrorMessage);
     }
 
     @isTest private static void testCategoryDeletion() {
@@ -130,14 +131,15 @@ public class DEL_KnowledgeManagementControllerTest {
         }
         Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
-        List<DEL_KnowledgeConfiguration__c> list_KnowledgeConfigurations = DEL_KnowledgeManagementController.saveCategories(
-                                                                            objWrapper.map_CategoryByParent,
-                                                                            list_CategoryWrapper, 
-                                                                            'Admin_Setup', 
-                                                                            map_AllKnowledgeArticlesByCategory.get('Client_Bookings'));
-        Test.stopTest();
+        DEL_KnowledgeManagementController.KnowledgeWrapper objKnowledgeWrapper = DEL_KnowledgeManagementController.saveCategories(
+                                                                                    objWrapper.map_CategoryByParent,
+                                                                                    list_CategoryWrapper, 
+                                                                                    'Admin_Setup', 
+                                                                                    map_AllKnowledgeArticlesByCategory);
+                Test.stopTest();
         List<DEL_KnowledgeConfiguration__c> list_AvailableKnowledgeConfigurations = [SELECT Id FROM DEL_KnowledgeConfiguration__c];
-        System.assertEquals(2, list_AvailableKnowledgeConfigurations.size(), 'Categories are not removed!');
+        System.assert(objKnowledgeWrapper.blnIsSuccess, objKnowledgeWrapper.strErrorMessage);
+        System.assert(objWrapper.blnIsSuccess, objKnowledgeWrapper.strErrorMessage);
     }
 
     @isTest private static void testKnowledgeArticlesMethods() {
@@ -146,23 +148,37 @@ public class DEL_KnowledgeManagementControllerTest {
 										  Title, 
 										  KnowledgeArticleId,
 										  PublishStatus, 
-										  VersionNumber, 
-										  SortOrder__c 
+										  VersionNumber
 										  FROM Knowledge__kav 
 										  WHERE PublishStatus='Online' 
 										  LIMIT 1];
 		
+        DEL_KnowledgeManagementController.KnowledgeWrapper objKnowledgeWrapper = new DEL_KnowledgeManagementController.KnowledgeWrapper();
         Test.startTest();
-        Map<String, Knowledge__kav> map_NextPreviousKnowledgeArticle = DEL_KnowledgeManagementController.DEL_Nxtprev(objKnowledgekav.Id);
-        Set<String> list_String = map_NextPreviousKnowledgeArticle.keySet();
+        DEL_KnowledgeManagementController.KnowledgeWrapper objWrapper = DEL_KnowledgeManagementController.getDescribeDataCategoryGroupStructureResults();
+        List<DEL_KnowledgeManagementController.CategoryWrapper> list_CategoryWrapper = new List<DEL_KnowledgeManagementController.CategoryWrapper>();
+        for (String strCategory : objWrapper.list_DefaultSortedCategories ) {
+            DEL_KnowledgeManagementController.CategoryWrapper objCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
+            objCategoryWrapper.name = strCategory;
+            objCategoryWrapper.SortOrder = '1';
+            list_CategoryWrapper.add(objCategoryWrapper);
+        }
+
         Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
+        DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
+        DEL_KnowledgeManagementController.KnowledgeWrapper objKnowledgeWrapperTwo = DEL_KnowledgeManagementController.saveCategories(
+                                                                                    objWrapper.map_CategoryByParent, 
+                                                                                    list_CategoryWrapper, 
+                                                                                    'Admin_Setup', 
+                                                                                    map_AllKnowledgeArticlesByCategory
+                                                                                    );
+        Map<String, Knowledge__kav> map_NextPreviousKnowledgeArticles = DEL_KnowledgeManagementController.getNextAndPreviousArticles(objKnowledgekav.Id, 'Client_Bookings');
+        Set<String> list_String = map_NextPreviousKnowledgeArticles.keySet();
         List<Knowledge__kav> list_KnowledgeArticles = map_AllKnowledgeArticlesByCategory.get('Client_Bookings');
-        DEL_KnowledgeManagementController.setknowledgeArticlesOrder(list_KnowledgeArticles);
         Test.stopTest();
         
         System.assert(!list_String.isEmpty(), 'ERROR: Atleast one either next or previous Knowledge article should be fetched');
         System.assert(!list_KnowledgeArticles.isEmpty(), 'ERROR: Atleast one Knowledge Article record should be fetched.');
-
 	}
 
     @isTest private static void testTableOfContentsMethods() {

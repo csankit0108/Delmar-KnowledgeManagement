@@ -2,7 +2,8 @@
 
 -- PRE-DEPLOYMENT STEPS --
 
-1. Take backup.
+1. Make sure the deployment user is assigned Knowledge User permission.
+2. Got to Setup > Digital Experiences > Settings and select Allow using standard external profiles for self-registration, user creation, and login.
 
 -- DEPLOYMENT --
 
@@ -10,14 +11,18 @@
     a. sfdx force:source:convert --rootdir force-app --outputdir delmarpackage
     b. jar -cfM zippackage.zip delmarpackage
     c. rmdir /s delmarpackage
-    d. sfdx force:mdapi:deploy --zipfile zippackage.zip --checkonly --testlevel RunSpecifiedTests --runtests 
+    d. sfdx force:mdapi:deploy --checkonly --zipfile zippackage.zip --targetusername DelmarProd --testlevel RunSpecifiedTests --runtests DEL_CaseCollaborationControllerTest,DEL_CaseCollaborationTriggerHelperTest,DEL_CaseCommentTriggerHelperTest,DEL_ContactCollaborationControllerTest,DEL_ContentDocumentLinkTriggerTest,DEL_EmailMessagesTriggerHelperTest,DEL_UtilsTest,DEL_KnowledgeManagementControllerTest
 2. For MAC
     a. sfdx force:source:convert --rootdir force-app --outputdir delmarpackage
     b. zip -r zippackage.zip delmarpackage
     c. rm -r delmarpackage
-    d. sfdx force:mdapi:deploy --zipfile zippackage.zip --checkonly --testlevel RunSpecifiedTests --runtests 
+    d. sfdx force:mdapi:deploy --checkonly --zipfile zippackage.zip --targetusername DelmarProd --testlevel RunSpecifiedTests --runtests DEL_CaseCollaborationControllerTest,DEL_CaseCollaborationTriggerHelperTest,DEL_CaseCommentTriggerHelperTest,DEL_ContactCollaborationControllerTest,DEL_ContentDocumentLinkTriggerTest,DEL_EmailMessagesTriggerHelperTest,DEL_UtilsTest,DEL_KnowledgeManagementControllerTest
     e. rm -r zippackage.zip
 
 
 -- POST-DEPLOYMENT STEPS --
+1. Add the "Knowledge Management" page to the "Delmar-Service Console" app.
+2. Add the "Knowledge Footer Component" to the Knowledge Article record page.
+3. Add the "Instance Category Tree Component" component to site page.
+4. Add the "Knowledge Footer Component" to the Article Detail page in site.
 
