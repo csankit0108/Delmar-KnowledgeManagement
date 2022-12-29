@@ -37,7 +37,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Knowledge__kav.SortOrder__c</field>
+        <field>DEL_KnowledgeConfiguration__c.KnowledgeArticleId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>DEL_KnowledgeConfiguration__c.Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <tabVisibilities>

@@ -11,6 +11,7 @@ import { keyCodes, deepCopy } from 'c/utilsPrivate';
 import UserPreferencesShowWorkPhoneToExternalUsers from '@salesforce/schema/User.UserPreferencesShowWorkPhoneToExternalUsers';
 //CLDEL00026 - "Category Name" (It stores the label for column name in tree)
 import CLDEL00026 from "@salesforce/label/c.CLDEL00026";
+
 export default class cTree extends LightningElement {
     @api header;
     @api draggable;
@@ -19,6 +20,7 @@ export default class cTree extends LightningElement {
     @api strFontStyle;
     @api blnSetUnderline;
     @api strFontColor;
+    @api recordId;
     
     @track strTreeTitle = CLDEL00026;
     @track _currentFocusedItem = null;
@@ -26,6 +28,7 @@ export default class cTree extends LightningElement {
     @track _key;
     @track _focusedChild = null;
     @track _items = [];
+    @track articlesItemSelected = [];
 
     _defaultFocused = { key: '1', parent: '0' };
     _selected = null;
@@ -283,6 +286,36 @@ export default class cTree extends LightningElement {
 
             this.hasDetachedListeners = false;
         }
+
+        //Highlight the Tree Item if the recordId matches with the record page.
+        if (this.treedata && this.treedata.hasOwnProperty('_nameKeyMapping') && this.recordId) {
+            let list_parentCategoryNames = [];
+            Object.keys(this.treedata._nameKeyMapping).forEach(eachKey => { 
+                if (eachKey.includes(this.recordId)) {
+                    let key;
+                    if (this.treedata._nameKeyMapping[eachKey]) {
+                        key = this.treedata._nameKeyMapping[eachKey];
+                    }
+                    if (this.treedata._indices[key]) {
+                        this.articlesItemSelected.push(this.treedata._indices[key]);
+                        this.setFocusToItem(this.treedata._indices[key], false);
+                        const articleItemSelectedParentKey = this.treedata._indices[key].parent;
+                        let articleParentCategoryName = this.treedata.getItem(articleItemSelectedParentKey).treeNode.name;
+                        list_parentCategoryNames.push(articleParentCategoryName);
+                    }
+                }
+            });
+            const customEvent = new CustomEvent('privateselectedtreeitemparent', {
+                bubbles: true,
+                composed: true,
+                cancelable: true,
+                detail: {
+                    selectedItemParentNames : list_parentCategoryNames
+                }
+            });
+    
+            this.dispatchEvent(customEvent);
+        }
     }
 
     disconnectedCallback() {
@@ -306,6 +339,11 @@ export default class cTree extends LightningElement {
                 this.dispatchSelectEvent(item.treeNode);
                 this.setFocusToItem(item);
             }
+        }
+        if (this.articlesItemSelected.length > 0 && this.recordId) {
+            this.articlesItemSelected.forEach(objItem => {
+                this.setFocusToItem(objItem, false);
+            });
         }
     }
 
@@ -391,29 +429,45 @@ export default class cTree extends LightningElement {
         }
     }
 
-    setFocusToItem(item, shouldFocus = true, shouldSelect = true) {
-        const currentFocused = this.treedata.getItemAtIndex(
-            this.treedata.currentFocusedItemIndex
-        );
-
-        if (
-            currentFocused &&
-            currentFocused.key !== item.key &&
-            this.callbackMap[currentFocused.parent]
-        ) {
-            this.callbackMap[currentFocused.key].unfocusCallback();
-        }
-        if (item) {
-            this._currentFocusedItem = this.treedata.updateCurrentFocusedItemIndex(
-                item.index
+    setFocusToItem(item, myWork = true, shouldFocus = true, shouldSelect = true) {
+        if (myWork) {
+            const currentFocused = this.treedata.getItemAtIndex(
+                this.treedata.currentFocusedItemIndex
             );
 
-            if (this.callbackMap[item.parent]) {
-                this.callbackMap[item.parent].focusCallback(
-                    item.key,
-                    shouldFocus,
-                    shouldSelect
+            if (
+                currentFocused &&
+                currentFocused.key !== item.key &&
+                this.callbackMap[currentFocused.parent]
+            ) {
+                this.callbackMap[currentFocused.key].unfocusCallback();
+            }
+            if (item) {
+                this._currentFocusedItem = this.treedata.updateCurrentFocusedItemIndex(
+                    item.index
                 );
+
+                if (this.callbackMap[item.parent]) {
+                    this.callbackMap[item.parent].focusCallback(
+                        item.key,
+                        shouldFocus,
+                        shouldSelect
+                    );
+                }
+            }
+        } else {
+            if (item) {
+                // this._currentFocusedItem = this.treedata.updateCurrentFocusedItemIndex(
+                //     item.index
+                // );
+
+                if (this.callbackMap[item.parent]) {
+                    this.callbackMap[item.parent].focusCallback(
+                        item.key,
+                        shouldFocus,
+                        shouldSelect
+                    );
+                }
             }
         }
     }

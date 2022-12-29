@@ -12,7 +12,8 @@
         <members>DEL_KnowledgeConfiguration__c.PageName__c</members>
         <members>DEL_KnowledgeConfiguration__c.ParentCategory__c</members>
         <members>DEL_KnowledgeConfiguration__c.SortOrder__c</members>
-        <members>Knowledge__kav.SortOrder__c</members>
+        <members>DEL_KnowledgeConfiguration__c.KnowledgeArticleId__c</members>
+        <members>DEL_KnowledgeConfiguration__c.Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -59,7 +60,7 @@
         <members>DEL_KnowledgeConfiguration__c-Knowledge Configuration Layout</members>
         <name>Layout</name>
     </types>
-        <types>
+    <types>
         <members>del_KnowledgeArticlesComponent</members>
         <members>del_DataCategoryTree</members>
         <members>del_knowledgeFooterComponent</members>
@@ -71,7 +72,7 @@
         <members>iconUtils</members>
         <name>LightningComponentBundle</name>
     </types>
-        <types>
+    <types>
         <members>Admin</members>
         <members>Delmar - BDM</members>
         <members>Delmar - CRM</members>
