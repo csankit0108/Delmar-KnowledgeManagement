@@ -167,15 +167,15 @@ public class DEL_KnowledgeManagementControllerTest {
         Map<String, List<Knowledge__kav>> map_AllKnowledgeArticlesByCategory = DEL_KnowledgeManagementController.getAllKnowledgeArticles();
         DEL_KnowledgeManagementController.CategoryWrapper objNewCategoryWrapper = new DEL_KnowledgeManagementController.CategoryWrapper();
         DEL_KnowledgeManagementController.KnowledgeWrapper objKnowledgeWrapperTwo = DEL_KnowledgeManagementController.saveCategories(
-                                                                                    objWrapper.map_CategoryByParent, 
-                                                                                    list_CategoryWrapper, 
-                                                                                    'Admin_Setup', 
-                                                                                    map_AllKnowledgeArticlesByCategory
+                                                                                        objWrapper.map_CategoryByParent, 
+                                                                                        list_CategoryWrapper, 
+                                                                                        'Admin_Setup', 
+                                                                                        map_AllKnowledgeArticlesByCategory
                                                                                     );
         Map<String, Knowledge__kav> map_NextPreviousKnowledgeArticles = DEL_KnowledgeManagementController.getNextAndPreviousArticles(objKnowledgekav.Id, 'Client_Bookings');
         Set<String> list_String = map_NextPreviousKnowledgeArticles.keySet();
         List<Knowledge__kav> list_KnowledgeArticles = map_AllKnowledgeArticlesByCategory.get('About_DCMS');
-');
+
         Test.stopTest();
         
         System.assert(!list_String.isEmpty(), 'ERROR: Atleast one either next or previous Knowledge article should be fetched');
