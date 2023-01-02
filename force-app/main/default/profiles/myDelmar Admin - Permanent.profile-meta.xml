@@ -47,6 +47,16 @@
         <field>DEL_KnowledgeConfiguration__c.SortOrder__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DEL_KnowledgeConfiguration__c.KnowledgeArticleId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DEL_KnowledgeConfiguration__c.Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <tabVisibilities>
         <tab>DEL_KnowledgeManagement</tab>
         <visibility>Hidden</visibility>
