@@ -21,11 +21,11 @@
             <lightning-layout>
                 <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" large-device-size="6"
                     padding="around-small" class="slds-p-top_none">
-                    <lightning-card title={strAvailableCategoriesTreeTitle}>
-                        <lightning-button-stateful name="treegrid" variant="neutral" label-when-off={strExpandAllButtonLabel}
+                    <lightning-card title={strAvailableCategoriesTreeTitle} class="del-card-availableSection">
+                        <!--<lightning-button-stateful name="treegrid" variant="neutral" label-when-off={strExpandAllButtonLabel}
                             label-when-on={strCollapseAllButtonLabel} selected={blnSelectedExpandCollapseTreeGrid} onclick={handleClickExpandCollapse}
                             slot="actions">
-                        </lightning-button-stateful>
+                        </lightning-button-stateful>-->
                         <div  class="slds-box slds-scrollable" style="height: 25rem;">
                             <template if:true={blnShowTreeGrid}>
                                 <lightning-tree-grid columns={gridColumns} ontoggle={handleToggle} onrowselection={handleRowSelection} data={gridData}

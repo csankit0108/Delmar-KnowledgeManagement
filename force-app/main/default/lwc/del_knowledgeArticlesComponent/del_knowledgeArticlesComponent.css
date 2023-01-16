@@ -5,6 +5,14 @@
     --slds-c-button-stateful-color-border-selected : rgb(201, 201, 201);
 }
 
+.del-card-availableSection {
+    --slds-c-card-header-spacing-block-start : 0.5rem;
+    --slds-c-card-header-spacing-inline-end : 0;
+    --slds-c-card-header-spacing-inline-start: 0;
+    --slds-c-card-header-spacing-block-end: 0.5rem;
+    --slds-c-button-stateful-color-border-selected : rgb(201, 201, 201);
+}
+
 .del-card{
     --slds-c-card-header-spacing-inline-start: 0.75rem;
 }
