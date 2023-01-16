@@ -68,6 +68,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     @track blnIsLoading = false;
     @track blnDisableSaveButton = true;
     @track blnIsResetDisabled = true;
+    @track blnTreeExpanded = false;
     @track strKnowledgeArticleTableTitle;
     @track list_KnowledgeArticles;
     @track visibleSaveButton;
@@ -100,6 +101,11 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
 
     renderedCallback () {
         this.blnIsTreeLoaded = true;
+        const treeGrid =  this.template.querySelector('lightning-tree-grid');
+        if (treeGrid && !this.blnTreeExpanded) {
+            treeGrid.expandAll();
+            this.blnTreeExpanded = true;
+        }
     }
 
     /**
@@ -270,10 +276,10 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     *@ description : This method is used to handle the operations on selection of category from available categories.
     **/
     handleRowSelection(event) {
-        if (this.blnIsToggle ) {
+        /*if (this.blnIsToggle ) {
             this.blnIsToggle = false;
             return;
-        }
+        }*/
 
         if (this.blnCollapse) {
             this.list_SelectedCategoryNamesBackup = this.list_SelectedCategoryNames;
@@ -355,7 +361,9 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     **/
     handleToggle(event) {
         if (!event.detail.isExpanded && event.detail.hasChildrenContent) {
-            this.blnIsToggle = true;
+            const treeGrid =  this.template.querySelector('lightning-tree-grid');
+            treeGrid.expandAll();
+            //this.blnIsToggle = true;
         }
     }
 
@@ -413,6 +421,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
             this.showToastMessage(CLDEL00001, error.body.message, 'error');
         })
         .finally(() => {
+            this.blnIsLoading = false;
             this.blnDisableSaveButton = true;
             this.blnIsResetDisabled = true;
         });
@@ -421,7 +430,7 @@ export default class Del_knowledgeArticlesComponent extends NavigationMixin(Ligh
     /**
     *@ author      : Ankit C
     *@ description : This method is used to display the ShowToast event based on the values of
-     *                   'strTitle','strMessage' and 'strVariant'
+    *                   'strTitle','strMessage' and 'strVariant'
     **/
     showToastMessage (strTitle, strMessage, strVariant) {
         const event = new ShowToastEvent({
